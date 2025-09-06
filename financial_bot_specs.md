@@ -16,7 +16,7 @@
 #### 2.1 Componentes Principales
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   Telegram Bot  │◄──►│  Raspberry Pi 5  │◄──►│   Web App       │
+│   Telegram Bot  │◄──►│   PC en Casa     │◄──►│   Web App       │
 │   (Captura)     │    │  (Procesamiento) │    │ (Visualización) │
 └─────────────────┘    └──────────────────┘    └─────────────────┘
                               │
@@ -27,15 +27,15 @@
 ```
 
 #### 2.2 Infraestructura
-- **Servidor Principal:** Raspberry Pi 5 ($50 USD)
+- **Servidor Principal:** PC viejo en casa ($0 USD - ya disponible)
 - **Hosting Web App:** Hosting compartido Namecheap (existente)
-- **Base de Datos:** SQLite en Raspberry Pi
+- **Base de Datos:** SQLite en PC local
 - **Dominio:** Dominio existente en Namecheap
 - **Conectividad:** Túnel Cloudflare gratuito
 
 #### 2.3 Costos Operativos
-- **Inicial:** ~$70 USD (Raspberry Pi + accesorios)
-- **Mensual:** ~$2-3 USD (electricidad)
+- **Inicial:** ~$0 USD (usando PC existente)
+- **Mensual:** ~$5-8 USD (electricidad PC)
 - **Hosting:** $0 (ya existente)
 
 ---
@@ -119,8 +119,8 @@ Extracción automática:
 
 #### 4.1 Stack Tecnológico
 
-**Raspberry Pi (Servidor Principal):**
-- **OS:** Raspberry Pi OS Lite
+**PC en Casa (Servidor Principal):**
+- **OS:** Linux (Ubuntu/Debian)
 - **Runtime:** Python 3.11+
 - **Framework Bot:** python-telegram-bot
 - **Base de Datos:** SQLite
@@ -298,12 +298,12 @@ Opciones:
 
 #### 6.4 Fase 4 - Optimización y Deploy (1-2 semanas)
 **Objetivos:**
-- Deploy en Raspberry Pi
+- Deploy en PC local
 - Optimización de performance
 - Monitoreo y logs
 
 **Entregables:**
-- Sistema productivo en Raspberry Pi
+- Sistema productivo en PC local
 - Túnel Cloudflare configurado
 - Web app desplegada en Namecheap
 - Documentación de usuario
@@ -366,11 +366,8 @@ Semana 11-12: Fase 4 - Deploy y Optimización
 #### 9.2 Presupuesto Total
 ```
 Hardware:
-├── Raspberry Pi 5: $50
-├── MicroSD 64GB: $15
-├── Fuente oficial: $10
-└── Case/accesorios: $15
-Total Hardware: $90
+└── PC existente: $0
+Total Hardware: $0
 
 Costos Operativos (anuales):
 ├── Electricidad: $30
@@ -378,7 +375,7 @@ Costos Operativos (anuales):
 └── Hosting: $0 (ya existente)
 Total Anual: $30
 
-ROI: Sistema se paga solo vs VPS en 18 meses
+ROI: Costo $0 inicial, solo electricidad vs VPS ($5-15/mes)
 ```
 
 ---
@@ -386,7 +383,7 @@ ROI: Sistema se paga solo vs VPS en 18 meses
 ### 10. RIESGOS Y MITIGACIONES
 
 #### 10.1 Riesgos Técnicos
-**Riesgo:** Falla de Raspberry Pi
+**Riesgo:** Falla del PC servidor
 **Mitigación:** Backup automático + procedimiento de restauración rápida
 
 **Riesgo:** Precisión baja del OCR  
@@ -426,7 +423,7 @@ ROI: Sistema se paga solo vs VPS en 18 meses
 ### 12. DOCUMENTACIÓN ADICIONAL
 
 #### 12.1 Manuales Requeridos
-- Manual de instalación en Raspberry Pi
+- Manual de instalación en PC local
 - Guía de usuario del bot de Telegram
 - Tutorial de uso de la web app
 - Procedimientos de backup y recuperación
