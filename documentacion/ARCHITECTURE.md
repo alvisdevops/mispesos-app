@@ -11,28 +11,28 @@ El sistema MisPesos está diseñado como una solución de gestión financiera pe
 │                    ECOSISTEMA MISPESOS                          │
 └─────────────────────────────────────────────────────────────────┘
 
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   TELEGRAM BOT  │◄──►│  HOME SERVER     │◄──►│   WEB APP       │
-│  (Interface de  │    │ (Procesamiento)  │    │ (Visualización) │
-│   Captura)      │    │                  │    │                 │
-│                 │    │ ┌──────────────┐ │    │ ┌─────────────┐ │
-│ • Input Natural │    │ │   FastAPI    │ │    │ │   React     │ │
-│ • OCR Photos    │    │ │   Server     │ │    │ │   Frontend  │ │
-│ • Commands      │    │ └──────────────┘ │    │ └─────────────┘ │
-│ • Confirmations │    │ ┌──────────────┐ │    │ ┌─────────────┐ │
-└─────────────────┘    │ │   Telegram   │ │    │ │ Tailwind    │ │
-                       │ │   Bot Core   │ │    │ │    CSS      │ │
-                       │ └──────────────┘ │    │ └─────────────┘ │
-┌─────────────────┐    │ ┌──────────────┐ │    └─────────────────┘
-│ CLOUDFLARE      │◄───┤ │  OCR Engine  │ │
-│ TUNNEL          │    │ │ (Tesseract)  │ │    ┌─────────────────┐
-│                 │    │ └──────────────┘ │    │ NAMECHEAP       │
-│ • ssh access    │    │ ┌──────────────┐ │    │ HOSTING         │
-│ • api access    │    │ │   SQLite     │ │    │                 │
-│ • web routing   │    │ │   Database   │ │    │ • Static Files  │
-└─────────────────┘    │ └──────────────┘ │    │ • Web Hosting   │
-                       └──────────────────┘    │ • CDN           │
-                                              └─────────────────┘
+┌─────────────────┐    ┌─────────────────────────────────────┐
+│   TELEGRAM BOT  │◄──►│         HOME SERVER                 │
+│  (Interface de  │    │       (alvis-server)                │
+│   Captura)      │    │                                     │
+│                 │    │ ┌─────────────┐ ┌─────────────────┐ │
+│ • Input Natural │    │ │   FastAPI   │ │   WEB APP       │ │
+│ • OCR Photos    │    │ │   Server    │ │ (Dashboard)     │ │
+│ • Commands      │    │ │  Port 8000  │ │                 │ │
+│ • Confirmations │    │ │  REST API   │ │ • React Frontend│ │
+└─────────────────┘    │ └─────────────┘ │ • Tailwind CSS  │ │
+                       │ ┌─────────────┐ │ • Analytics     │ │
+                       │ │  Telegram   │ │ • Export Tools  │ │
+                       │ │  Bot Core   │ │                 │ │
+                       │ │ + Redis     │ └─────────────────┘ │
+                       │ │ Queue Mgr   │ ┌─────────────────┐ │
+                       │ └─────────────┘ │   OCR Engine    │ │
+                       │ ┌─────────────┐ │  (Tesseract)    │ │
+                       │ │ PostgreSQL  │ │ Image Process   │ │
+                       │ │  Database   │ └─────────────────┘ │
+                       │ │Local Storage│                     │
+                       │ └─────────────┘                     │
+                       └─────────────────────────────────────┘
 ```
 
 ## Componentes Detallados
@@ -68,13 +68,14 @@ Usuario → Mensaje/Foto → Bot → Parser/OCR → Validación → Confirmació
 - Gestión de webhooks de Telegram
 - Exposición de endpoints para consultas y modificaciones
 
-#### 2.2 Telegram Bot Core
+#### 2.2 Telegram Bot Core + Redis Queue Manager
 **Responsabilidades:**
 - Parsing de mensajes en lenguaje natural
 - Extracción de entidades (monto, categoría, fecha, etc.)
 - Lógica de comandos del bot
 - Gestión de conversaciones y estado
 - Integración con sistema de categorización automática
+- Gestión de colas asíncronas con Redis para OCR y procesamiento
 
 #### 2.3 OCR Engine (Tesseract)
 **Responsabilidades:**
@@ -83,13 +84,14 @@ Usuario → Mensaje/Foto → Bot → Parser/OCR → Validación → Confirmació
 - Post-procesamiento para identificación de campos específicos
 - Extracción de metadatos fiscales (NIT, número de factura, etc.)
 
-#### 2.4 SQLite Database
+#### 2.4 PostgreSQL Database
 **Responsabilidades:**
-- Almacenamiento de transacciones
+- Almacenamiento robusto de transacciones
 - Gestión de categorías y reglas de clasificación
 - Almacenamiento de metadatos de facturas
 - Respaldo de imágenes procesadas
 - Auditoría de cambios
+- Soporte para concurrencia y backups avanzados
 
 **Esquema Principal:**
 ```sql
@@ -115,21 +117,24 @@ categories & category_keywords
 ```
 
 ### 3. Web Application (Interface de Visualización)
-**Propósito:** Dashboard completo para análisis y gestión financiera
+**Propósito:** Dashboard completo integrado en el Home Server
+**Ubicación:** Contenedor dentro del mismo servidor alvis-server
 
-#### 3.1 React Frontend
+#### 3.1 React Frontend Containerizado
 **Responsabilidades:**
 - Dashboard ejecutivo con KPIs
 - Vista detallada tipo Excel de transacciones
 - Módulo fiscal para gestión de facturas
 - Formularios de edición y configuración
 - Exportación de datos (Excel, PDF, CSV)
+- Comunicación directa con FastAPI (misma red interna)
 
 #### 3.2 Características Principales
 - **Dashboard:** Gráficos de tendencias, resúmenes por categoría, alertas
 - **Vista Detallada:** Tabla completa con filtros, búsqueda, ordenamiento
 - **Módulo Fiscal:** Organización de facturas, reportes para impuestos
 - **Configuración:** Gestión de categorías, reglas, presupuestos
+- **Ventajas de Containerización:** Comunicación ultra-rápida con API, deploy unificado
 
 ## Infraestructura y Conectividad
 
@@ -142,17 +147,18 @@ categories & category_keywords
 
 ### Conectividad Externa
 ```
-Internet ◄─► Cloudflare Tunnel ◄─► Home Server (192.168.1.20)
-                    │
-                    ▼
-              Web App (Namecheap)
+Internet ◄─► Router Port Forward ◄─► Home Server (192.168.1.20)
+                    │                         │
+                    ▼                         ▼
+         Telegram Webhooks ────────► Web App (Puerto 80/443)
+                                     FastAPI (Puerto 8000)
 ```
 
-**Cloudflare Tunnel:**
-- ID: fb6f53c9-f452-4da0-9001-33d96d2dd220
-- Dominio: cristianalvis.com
-- SSH Access: ssh.cristianalvis.com
-- API Endpoints: api.cristianalvis.com
+**Configuración de Producción:**
+- **Web App:** Puerto 80/443 (requiere port forwarding en router)
+- **API FastAPI:** Puerto 8000 (acceso directo para desarrollo/APIs)
+- **Telegram Webhooks:** Directo desde servers de Telegram
+- **Arquitectura Unificada:** Todo en el mismo servidor, comunicación interna ultra-rápida
 
 ### Red Local Redundante
 **Ethernet (enp1s0):** IP 192.168.1.23, Métrica 100 (prioridad alta)
@@ -194,17 +200,17 @@ Web App: Actualizar con nueva transacción y factura
 
 ### 3. Consulta Web Dashboard
 ```
-Usuario: Accede a Web App
+Usuario: Accede a Web App (localhost o IP servidor)
     ↓
-React: Cargar dashboard
+React: Cargar dashboard (misma red que API)
     ↓
-API REST: Solicitar datos a FastAPI
+API REST: Solicitar datos a FastAPI (comunicación interna)
     ↓
-FastAPI: Consultar SQLite
+FastAPI: Consultar PostgreSQL
     ↓
-SQLite: Devolver datos agregados
+PostgreSQL: Devolver datos agregados
     ↓
-Web App: Renderizar gráficos y tablas
+Web App: Renderizar gráficos y tablas (ultra-rápido)
 ```
 
 ## Consideraciones de Seguridad
@@ -222,24 +228,28 @@ Web App: Renderizar gráficos y tablas
 - **Auditoría:** Log de todas las transacciones y accesos
 
 ### Conectividad Segura
-- **Sin puertos abiertos:** Solo Cloudflare Tunnel
-- **VPN no requerida:** Túnel seguro incorporado
+- **Puerto API expuesto:** Solo puerto 8000 para FastAPI (HTTPS recomendado)
+- **Firewall:** Solo permitir tráfico en puerto 8000
 - **Rate limiting:** Protección contra ataques de API
 - **Monitoreo:** Alertas automáticas por accesos sospechosos
+- **SSL/TLS:** Certificados para API endpoints (Let's Encrypt)
 
 ## Escalabilidad y Rendimiento
 
 ### Optimizaciones Actuales
-- **SQLite:** Adecuado para uso personal (< 100K transacciones/año)
-- **Caché:** Respuestas frecuentes cacheadas en memoria
+- **PostgreSQL:** Base de datos robusta para crecimiento futuro
+- **Redis:** Caché y gestión de colas para procesamiento asíncrono
+- **Containerización:** Isolación de servicios y escalabilidad
+- **Comunicación Interna:** Web App y API en la misma red Docker
 - **Imágenes:** Compresión automática de facturas
 - **API:** Paginación en consultas grandes
 
 ### Planes de Escalabilidad Futura
 - **Base de Datos:** Migración a PostgreSQL si es necesario
 - **Caché:** Redis para sesiones web si se requiere
-- **CDN:** Optimización de imágenes vía Cloudflare
+- **CDN:** Optimización de imágenes vía Namecheap/CDN
 - **Monitoreo:** Métricas de performance y uso
+- **Load Balancer:** Si se requiere más de una instancia
 
 ## Monitoreo y Mantenimiento
 

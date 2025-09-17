@@ -12,13 +12,14 @@ Establecer la infraestructura básica y funcionalidad core del bot de Telegram c
 ### Componentes a Desarrollar
 
 #### 1.1 Configuración de Infraestructura
-- **Servidor Home:** Configuración completa del ambiente Python en alvis-server
-- **Base de Datos:** Setup inicial de SQLite con esquema completo
-- **Entorno:** Dockerización básica para desarrollo y pruebas
+- **Servidor Home:** Configuración completa del ambiente Docker en alvis-server
+- **Base de Datos:** Setup inicial de PostgreSQL con esquema completo
+- **Entorno:** Containerización completa con Docker Compose para desarrollo y producción
+- **Redis:** Configuración de cache y queue manager
 
 #### 1.2 Bot de Telegram Core
 - **Registro con BotFather:** Creación y configuración del bot
-- **Webhook Setup:** Configuración de webhook con Cloudflare Tunnel
+- **Webhook Setup:** Configuración de webhook (durante desarrollo usar ngrok o similar, en producción usar IP pública + port forwarding)
 - **Parsing Básico:** Interpretación de mensajes simples ("50k almuerzo efectivo")
 - **Comandos Básicos:**
   - `/start` - Bienvenida y setup inicial
@@ -80,31 +81,35 @@ Agregar procesamiento de facturas mediante OCR y dashboard web básico para visu
 - **Error Handling:** Manejo de casos donde OCR falla
 - **User Feedback:** Estados de procesamiento ("📸 Procesando factura...")
 
-#### 2.3 Web Application Frontend
-- **React Setup:** Configuración de React con Tailwind CSS
+#### 2.3 Web Application Frontend (Containerizada)
+- **React Setup:** Configuración de React con Tailwind CSS en contenedor
+- **Container Config:** Dockerfile optimizado para producción
 - **Páginas básicas:**
   - Dashboard principal con KPIs básicos
   - Lista de transacciones (tabla simple)
   - Vista de detalle de transacción
 - **Gráficos básicos:** Gastos por categoría, tendencia por días
 - **Responsive Design:** Mobile-first approach
+- **Integración Docker:** Comunicación interna con FastAPI container
 
-#### 2.4 API Extensions
+#### 2.4 API Extensions & Container Integration
 - **Endpoints adicionales:**
-  - `POST /receipts/process` - Procesar imagen OCR
+  - `POST /receipts/process` - Procesar imagen OCR (con Redis queue)
   - `GET /dashboard/stats` - Estadísticas para dashboard
   - `GET /receipts/{id}` - Ver factura almacenada
-- **File Upload:** Manejo de subida de archivos de imagen
+- **File Upload:** Manejo de subida de archivos con volúmenes Docker
 - **Data Aggregation:** Endpoints para datos agregados (gráficos)
+- **Container Communication:** Configuración de red Docker interna
 
 ### Entregables Fase 2
 - [ ] OCR funcional con precisión >80% en facturas comunes
-- [ ] Almacenamiento de imágenes con metadatos
-- [ ] Web app básica con dashboard y lista de transacciones
+- [ ] Almacenamiento de imágenes con metadatos en volúmenes Docker
+- [ ] Web app containerizada con dashboard y lista de transacciones
 - [ ] Gráficos de gastos por categoría y tiempo
 - [ ] Bot procesa fotos y confirma datos extraídos
-- [ ] Deploy básico de web app en Namecheap
+- [ ] Deploy completo con Docker Compose en alvis-server
 - [ ] API extendida con endpoints para dashboard
+- [ ] Redis queue funcionando para procesamiento asíncrono
 
 ### Criterios de Éxito Fase 2
 - Usuario puede fotografiar factura y obtener transacción completa
@@ -184,11 +189,12 @@ Deploy completo en producción, optimización de performance y setup de monitore
 ### Componentes a Desarrollar
 
 #### 4.1 Production Deployment
-- **Docker Production:** Configuración optimizada para producción
-- **Cloudflare Tunnel:** Setup completo para acceso externo
-- **Web App Deploy:** Deploy optimizado en hosting Namecheap
-- **Database Optimization:** Índices y optimizaciones de performance
-- **SSL/Security:** Configuración completa de seguridad
+- **Docker Production:** Configuración optimizada para producción con compose
+- **Port Forwarding:** Configuración del router para puertos 80/443 y 8000 (requiere coordinación)
+- **Web App Deploy:** Web app containerizada en el mismo servidor
+- **Database Optimization:** PostgreSQL con índices y optimizaciones de performance
+- **SSL/Security:** Configuración completa de seguridad con certificados
+- **Container Orchestration:** Health checks, restart policies, resource limits
 
 #### 4.2 Monitoreo y Logging
 - **Health Monitoring:** Checks automáticos de todos los componentes
@@ -237,26 +243,31 @@ Deploy completo en producción, optimización de performance y setup de monitore
 
 ### Tools y Frameworks
 
-#### Backend
-- **Python 3.11+** con FastAPI
+#### Backend (Containerizado)
+- **Python 3.11+** con FastAPI en contenedor
+- **PostgreSQL 15** como base de datos principal
+- **Redis 7** para cache y queue management
 - **SQLAlchemy** para ORM
 - **Alembic** para migraciones de DB
 - **pytest** para testing
 - **python-telegram-bot** para integración Telegram
-- **Tesseract OCR** para procesamiento de imágenes
+- **Tesseract OCR** para procesamiento de imágenes en contenedor dedicado
 
-#### Frontend
-- **React 18** con TypeScript
+#### Frontend (Containerizado)
+- **React 18** con TypeScript en contenedor Node.js
 - **Tailwind CSS** para estilos
 - **Recharts** para gráficos
 - **React Query** para manejo de estado servidor
 - **Vite** como bundler
+- **Nginx** como reverse proxy y servidor web
 
 #### DevOps
-- **Docker & Docker Compose** para containerización
+- **Docker & Docker Compose** para containerización completa
 - **GitHub Actions** para CI/CD (opcional)
-- **Cloudflare Tunnel** para conectividad
-- **systemd** para servicios en producción
+- **Router Port Forwarding** para conectividad Web App y API
+- **systemd** para gestión de Docker en producción
+- **Docker Networks** para comunicación interna segura
+- **Docker Volumes** para persistencia de datos
 
 ### Testing Strategy
 - **Unit Tests:** Funciones de parsing, OCR, categorización
@@ -275,10 +286,11 @@ Deploy completo en producción, optimización de performance y setup de monitore
 ## Cronograma Detallado
 
 ### Semana 1: Infrastructure Setup
-- [ ] Configuración completa del servidor Ubuntu
-- [ ] Setup de Python environment con FastAPI
-- [ ] Configuración inicial de SQLite con schema
-- [ ] Setup básico de Docker para desarrollo
+- [ ] Configuración completa del servidor Ubuntu con Docker
+- [ ] Setup de contenedores base (PostgreSQL, Redis)
+- [ ] Configuración inicial de PostgreSQL con schema
+- [ ] Setup completo de Docker Compose para desarrollo
+- [ ] Configuración de redes y volúmenes Docker
 
 ### Semana 2: Bot Basic Functionality  
 - [ ] Registro y configuración del bot de Telegram
@@ -305,16 +317,18 @@ Deploy completo en producción, optimización de performance y setup de monitore
 - [ ] Optimización de precisión
 
 ### Semana 6: Web App Foundation
-- [ ] Setup de React con Tailwind
+- [ ] Setup de React con Tailwind en contenedor
+- [ ] Dockerfile optimizado para frontend
 - [ ] Dashboard básico con KPIs simples
 - [ ] Lista de transacciones con filtros básicos
-- [ ] Integración con API backend
+- [ ] Integración con API backend via red Docker interna
 
 ### Semana 7: Web App Core Features
 - [ ] Gráficos básicos de gastos
 - [ ] Vista de detalle de transacciones
-- [ ] Deploy básico en Namecheap
+- [ ] Integración completa con Docker Compose
 - [ ] Mobile responsiveness
+- [ ] Nginx reverse proxy configurado
 
 ### Semana 8: Smart Categorization
 - [ ] Algoritmo de categorización inteligente
@@ -335,10 +349,11 @@ Deploy completo en producción, optimización de performance y setup de monitore
 - [ ] Predicciones de gasto
 
 ### Semana 11: Production Deployment
-- [ ] Configuración de producción optimizada
-- [ ] Setup completo de Cloudflare Tunnel
-- [ ] Deploy final de web app
-- [ ] Configuración de SSL y seguridad
+- [ ] Configuración de producción optimizada con Docker
+- [ ] Configuración de port forwarding en router (coordinación con admin de red)
+- [ ] Deploy final containerizado completo
+- [ ] Configuración de SSL y seguridad con Nginx
+- [ ] Health checks y monitoring de contenedores
 
 ### Semana 12: Monitoring & Documentation
 - [ ] Sistema completo de monitoreo
@@ -352,7 +367,7 @@ Deploy completo en producción, optimización de performance y setup de monitore
 
 ### Restricciones del Entorno
 - **Acceso Físico Limitado:** Todo debe configurarse remotamente
-- **Sin Port Forwarding:** Solo Cloudflare Tunnel disponible
+- **Port Forwarding limitado:** Requiere coordinación con administrador de red
 - **Hardware Limitado:** PC viejo debe manejar carga eficientemente
 - **Conectividad:** Dependencia de internet doméstico estable
 

@@ -148,43 +148,46 @@ The system is designed to run on:
 - **Usuario:** devcris
 - **IP Local:** 192.168.1.20
 
-### Configuración de Cloudflare Tunnel
-- **Nombre del Tunnel:** alvis-server
-- **ID del Tunnel:** fb6f53c9-f452-4da0-9001-33d96d2dd220
-- **Servicio:** Configurado como servicio systemd para inicio automático
-- **Configuración:** ~/.cloudflared/config.yml
+### Configuración de Acceso Externo (Producción)
+- **Puerto API:** 8000 (FastAPI)
+- **Puerto Web:** 80/443 (si se necesita servir contenido web local)
+- **Telegram Webhooks:** Directo desde Telegram servers
+- **Web App:** Hosted en Namecheap, consume API directamente
 
-### Comandos de Conexión SSH
+### Comandos de Conexión SSH (Solo Desarrollo)
 ```bash
 # Desde red local
 ssh devcris@192.168.1.20
 
-# Desde cualquier lugar (remoto)
+# Desde cualquier lugar (remoto) - SOLO PARA DESARROLLO
 ssh -o ProxyCommand="cloudflared access ssh --hostname ssh.cristianalvis.com" devcris@ssh.cristianalvis.com
 
-# Alias para conveniencia
+# Alias para conveniencia (desarrollo)
 alias ssh-server="ssh -o ProxyCommand=\"cloudflared access ssh --hostname ssh.cristianalvis.com\" devcris@ssh.cristianalvis.com"
 ```
 
+**Nota:** Cloudflare Tunnel es SOLO para acceso SSH de desarrollo desde tu Mac. El sistema en producción NO depende de Cloudflare.
+
 ### Características de Seguridad
 - Solo autenticación por llaves SSH (autenticación por contraseña deshabilitada)
-- Cloudflare Tunnel (sin puertos expuestos en el router)
+- Port forwarding en router para API (puerto 8000) cuando el sistema esté en producción
 - Login de root deshabilitado
 - Restricción de usuario (solo devcris permitido)
+- Firewall configurado para solo permitir puertos necesarios
 
 ### Restricciones de Acceso Físico
 **IMPORTANTE:** El administrador del sistema **NO** tiene acceso físico regular al servidor ni al router donde está ubicado. Esto significa:
 
-- **No se pueden abrir puertos** en el router para VPN o servicios adicionales
-- **No se puede configurar port forwarding** tradicional
-- **Solo acceso remoto** vía Cloudflare Tunnel es viable
+- **Cambios en router requieren coordinación** con administrador de red
+- **Port forwarding** debe ser configurado por terceros cuando se lance a producción
+- **Solo acceso remoto** vía Cloudflare Tunnel es viable para desarrollo
 - Cualquier configuración debe ser **100% remota** y **sin intervención física**
 
 **Implicaciones para Desarrollo:**
-- Cloudflare Tunnel es la **única opción** para acceso remoto confiable
-- Evitar soluciones que requieran cambios en router/firewall
+- Cloudflare Tunnel es la **única opción** para acceso SSH de desarrollo
+- Desarrollo y testing inicial será en red local o via tunnel SSH
+- Para producción, se requerirá abrir puerto 8000 en router (coordinación necesaria)
 - Configuraciones deben ser reversibles remotamente
-- Priorizar soluciones que no comprometan la conectividad actual
 
 ### Configuración de Red (Completada)
 **Conectividad Redundante Automática:**

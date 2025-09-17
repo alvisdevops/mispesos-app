@@ -31,7 +31,7 @@
 - **Hosting Web App:** Hosting compartido Namecheap (existente)
 - **Base de Datos:** SQLite en PC local
 - **Dominio:** Dominio existente en Namecheap
-- **Conectividad:** Túnel Cloudflare gratuito
+- **Conectividad:** Port forwarding en router (puerto 8000)
 
 #### 2.3 Costos Operativos
 - **Inicial:** ~$0 USD (usando PC existente)
@@ -198,7 +198,7 @@ CREATE TABLE category_keywords (
 - Post-procesamiento para extracción de datos específicos
 
 **Conectividad Externa:**
-- Cloudflare Tunnel para acceso remoto
+- Port forwarding para acceso API remoto
 - API REST para comunicación web app ↔ servidor Pi
 - Backup automático a hosting Namecheap
 
@@ -304,7 +304,7 @@ Opciones:
 
 **Entregables:**
 - Sistema productivo en PC local
-- Túnel Cloudflare configurado
+- Port forwarding configurado en router
 - Web app desplegada en Namecheap
 - Documentación de usuario
 
@@ -376,6 +376,7 @@ Costos Operativos (anuales):
 Total Anual: $30
 
 ROI: Costo $0 inicial, solo electricidad vs VPS ($5-15/mes)
+Ventaja adicional: Web app integrada elimina hosting externo ($0/mes vs $3-8/mes)
 ```
 
 ---
