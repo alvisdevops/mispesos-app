@@ -41,20 +41,27 @@ El sistema MisPesos está diseñado como una solución de gestión financiera pe
 **Propósito:** Punto de entrada principal para captura de transacciones
 
 **Responsabilidades:**
-- Procesar mensajes de texto en lenguaje natural
+- Procesar mensajes de texto en lenguaje natural con IA local
+- Extraer información financiera desde texto libre (sin comandos rígidos)
 - Recibir y pre-procesar imágenes de facturas
 - Ejecutar comandos de consulta (/resumen, /categorias, etc.)
 - Proporcionar confirmaciones y feedback inmediato
 - Manejar correcciones de transacciones
+- Integración con modelos AI locales para parsing inteligente
 
 **Tecnologías:**
 - `python-telegram-bot` library
 - Webhook para recepción de mensajes
 - Integración con FastAPI backend
+- **Ollama** para modelos AI locales (LLaMA 3.2:3b → Phi-3:mini)
+- **AI-powered parsing** en lugar de regex tradicional
 
 **Flujo de Datos:**
 ```
-Usuario → Mensaje/Foto → Bot → Parser/OCR → Validación → Confirmación → Usuario
+Usuario → Mensaje/Foto → Bot → AI Parser/OCR → Validación → Confirmación → Usuario
+                                    ↓
+                            Ollama (LLaMA/Phi-3)
+                               Local AI
 ```
 
 ### 2. Home Server (Núcleo de Procesamiento)
@@ -68,14 +75,21 @@ Usuario → Mensaje/Foto → Bot → Parser/OCR → Validación → Confirmació
 - Gestión de webhooks de Telegram
 - Exposición de endpoints para consultas y modificaciones
 
-#### 2.2 Telegram Bot Core + Redis Queue Manager
+#### 2.2 Telegram Bot Core + AI Engine + Redis Queue Manager
 **Responsabilidades:**
-- Parsing de mensajes en lenguaje natural
-- Extracción de entidades (monto, categoría, fecha, etc.)
+- **Parsing inteligente** con IA local (Ollama + LLaMA/Phi-3)
+- Extracción de entidades financieras desde texto libre
+- Fallback a regex si IA falla (sistema robusto)
 - Lógica de comandos del bot
 - Gestión de conversaciones y estado
 - Integración con sistema de categorización automática
 - Gestión de colas asíncronas con Redis para OCR y procesamiento
+
+**Estrategia de Modelos AI:**
+- **Desarrollo:** LLaMA 3.2:3b (funciona con 8GB RAM actuales)
+- **Producción:** Phi-3:mini (requiere upgrade a 16GB RAM)
+- **Cambio trivial:** Solo modificar parámetro "model" en código
+- **100% Local:** Sin dependencias externas, procesamiento privado
 
 #### 2.3 OCR Engine (Tesseract)
 **Responsabilidades:**
@@ -84,7 +98,51 @@ Usuario → Mensaje/Foto → Bot → Parser/OCR → Validación → Confirmació
 - Post-procesamiento para identificación de campos específicos
 - Extracción de metadatos fiscales (NIT, número de factura, etc.)
 
-#### 2.4 PostgreSQL Database
+#### 2.4 Ollama AI Engine
+**Propósito:** Procesamiento local de lenguaje natural para parsing inteligente
+
+**Responsabilidades:**
+- Análisis semántico de mensajes financieros en texto libre
+- Extracción estructurada de datos (monto, categoría, método de pago, etc.)
+- Categorización automática inteligente
+- Procesamiento 100% local sin APIs externas
+
+**Modelos Soportados:**
+```yaml
+Estrategia Progresiva:
+├── Desarrollo (8GB RAM): LLaMA 3.2:3b
+│   ├── Tamaño: ~2GB
+│   ├── Velocidad: 1-2 segundos
+│   └── Precisión: Alta para español
+└── Producción (16GB RAM): Phi-3:mini
+    ├── Tamaño: ~2.3GB
+    ├── Velocidad: <1 segundo
+    └── Precisión: Máxima capacidad conversacional
+```
+
+**Ejemplos de Parsing:**
+```
+Input: "50k almuerzo tarjeta"
+Output: {
+  "amount": 50000,
+  "description": "almuerzo",
+  "category": "alimentacion",
+  "payment_method": "tarjeta",
+  "confidence": 0.95
+}
+
+Input: "pagué 25000 de uber efectivo ayer"
+Output: {
+  "amount": 25000,
+  "description": "uber",
+  "category": "transporte",
+  "payment_method": "efectivo",
+  "date_offset": -1,
+  "confidence": 0.92
+}
+```
+
+#### 2.5 PostgreSQL Database
 **Responsabilidades:**
 - Almacenamiento robusto de transacciones
 - Gestión de categorías y reglas de clasificación
@@ -240,6 +298,9 @@ Web App: Renderizar gráficos y tablas (ultra-rápido)
 - **PostgreSQL:** Base de datos robusta para crecimiento futuro
 - **Redis:** Caché y gestión de colas para procesamiento asíncrono
 - **Containerización:** Isolación de servicios y escalabilidad
+- **AI Local:** Ollama para procesamiento inteligente sin APIs externas
+- **Modelos AI:** Estrategia progresiva según recursos disponibles
+- **Parsing Inteligente:** IA local + fallback regex para robustez
 - **Comunicación Interna:** Web App y API en la misma red Docker
 - **Imágenes:** Compresión automática de facturas
 - **API:** Paginación en consultas grandes

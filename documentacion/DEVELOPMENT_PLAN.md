@@ -16,11 +16,13 @@ Establecer la infraestructura básica y funcionalidad core del bot de Telegram c
 - **Base de Datos:** Setup inicial de PostgreSQL con esquema completo
 - **Entorno:** Containerización completa con Docker Compose para desarrollo y producción
 - **Redis:** Configuración de cache y queue manager
+- **Ollama:** Configuración de AI engine con LLaMA 3.2:3b inicial
 
-#### 1.2 Bot de Telegram Core
+#### 1.2 Bot de Telegram Core + AI Integration
 - **Registro con BotFather:** Creación y configuración del bot
 - **Webhook Setup:** Configuración de webhook (durante desarrollo usar ngrok o similar, en producción usar IP pública + port forwarding)
-- **Parsing Básico:** Interpretación de mensajes simples ("50k almuerzo efectivo")
+- **AI Parsing:** Integración con Ollama para parsing inteligente de texto libre
+- **Fallback System:** Sistema regex como backup si AI falla
 - **Comandos Básicos:**
   - `/start` - Bienvenida y setup inicial
   - `/help` - Guía de uso
@@ -35,10 +37,12 @@ Establecer la infraestructura básica y funcionalidad core del bot de Telegram c
   - `GET /summary/{period}` - Resúmenes básicos
 - **Modelos de datos:** SQLAlchemy models básicos
 
-#### 1.4 Sistema de Categorización Básico
+#### 1.4 Sistema de Categorización AI-Powered
 - **Categorías predefinidas:** Alimentación, Transporte, Servicios, Otros
-- **Matching simple:** Por palabras clave básicas
-- **Fallback manual:** Solicitar categoría si no se detecta
+- **AI Categorization:** LLaMA 3.2:3b para categorización semántica
+- **Fallback Keywords:** Sistema palabras clave como backup
+- **Fallback manual:** Solicitar categoría si ambos sistemas fallan
+- **Learning:** Registro de patrones para mejora continua
 
 ### Entregables Fase 1
 - [ ] Bot funcional con parsing básico de mensajes
@@ -247,6 +251,7 @@ Deploy completo en producción, optimización de performance y setup de monitore
 - **Python 3.11+** con FastAPI en contenedor
 - **PostgreSQL 15** como base de datos principal
 - **Redis 7** para cache y queue management
+- **Ollama** para AI local (LLaMA 3.2:3b → Phi-3:mini)
 - **SQLAlchemy** para ORM
 - **Alembic** para migraciones de DB
 - **pytest** para testing
@@ -269,11 +274,55 @@ Deploy completo en producción, optimización de performance y setup de monitore
 - **Docker Networks** para comunicación interna segura
 - **Docker Volumes** para persistencia de datos
 
+### AI Development Strategy
+
+#### Estrategia Progresiva de Modelos
+```yaml
+Fase de Desarrollo (Recursos Actuales):
+├── Hardware: 8GB RAM disponibles
+├── Modelo: LLaMA 3.2:3b (~2GB)
+├── Performance: 1-2 segundos respuesta
+├── Capacidad: Parsing básico en español
+└── Objetivo: Validar funcionalidad AI
+
+Fase de Producción (Upgrade Futuro):
+├── Hardware: 16GB RAM (upgrade planificado)
+├── Modelo: Phi-3:mini (~2.3GB)
+├── Performance: <1 segundo respuesta
+├── Capacidad: Conversacional avanzada
+└── Objetivo: Máxima precisión parsing
+```
+
+#### Implementación AI
+- **Cambio Trivial:** Solo modificar parámetro "model" en código
+- **Sin Reconfiguration:** Docker Compose permanece igual
+- **Fallback Robusto:** Sistema regex si AI falla
+- **Local Processing:** 100% privado, sin APIs externas
+- **Model Management:** Ollama maneja descarga y optimización
+
+#### Prompts para Parsing Financiero
+```python
+# Ejemplo de prompt engineering para transacciones
+prompt = """
+Extrae información financiera del siguiente mensaje:
+"{user_message}"
+
+Devuelve JSON con:
+- amount: monto numérico
+- description: descripción corta
+- category: alimentacion|transporte|servicios|otros
+- payment_method: efectivo|tarjeta|transferencia
+- confidence: 0.0-1.0
+"""
+```
+
 ### Testing Strategy
 - **Unit Tests:** Funciones de parsing, OCR, categorización
+- **AI Tests:** Validación de parsing con casos conocidos
 - **Integration Tests:** APIs, bot workflows, database operations
 - **E2E Tests:** Flujos completos usuario-bot-web
 - **Manual Testing:** Validación de OCR con facturas reales
+- **AI Benchmarks:** Precisión de modelos con dataset español
 
 ### Git Workflow
 - **Main Branch:** Código de producción
