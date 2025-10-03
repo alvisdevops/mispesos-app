@@ -29,7 +29,6 @@ venv/
 env/
 ENV/
 .venv/
-.env
 
 # IDE
 .vscode/
@@ -87,6 +86,3 @@ coverage.xml
 
 # Redis dump
 dump.rdb
-
-# PostgreSQL
-*.sql
