@@ -13,8 +13,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Deploy with Docker Compose
+      - name: Show deployed files
         run: |
-          docker-compose down
-          docker-compose up -d --build
-          docker-compose ps
+          echo "Repository cloned successfully"
+          ls -la
+          echo "Workflow is ready for deployment commands"
