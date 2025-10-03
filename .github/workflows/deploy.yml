@@ -26,7 +26,7 @@ jobs:
 
       - name: Deploy with Docker Compose
         run: |
-          docker-compose down || true
-          docker-compose up -d --build
-          docker-compose ps
+          docker compose down || true
+          docker compose up -d --build
+          docker compose ps
           echo "✅ Deployment completed"
