@@ -26,7 +26,10 @@ jobs:
 
       - name: Deploy with Docker Compose
         run: |
-          docker compose down || true
-          docker compose up -d --build
+          echo "🚀 Starting deployment..."
+          docker compose up -d
+          echo ""
+          echo "📊 Container Status:"
           docker compose ps
-          echo "✅ Deployment completed"
+          echo ""
+          echo "✅ Deployment completed - only changed services were recreated"
