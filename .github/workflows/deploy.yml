@@ -15,11 +15,11 @@ jobs:
 
       - name: Create .env file from secrets
         run: |
-          # Contar variables en el .env original del repo
-          ORIGINAL_COUNT=$(grep -c '=' .env || echo 0)
+          # Contar variables válidas del .env original (excluye comentarios y líneas vacías)
+          ORIGINAL_COUNT=$(grep -v '^#' .env | grep -v '^$' | grep -c '=' || echo 0)
           echo "📊 El .env original tiene $ORIGINAL_COUNT variables"
 
-          # Crear .env con secrets
+          # Generar .env con valores de secrets
           cat > .env << EOF
           POSTGRES_DB=${{ secrets.POSTGRES_DB }}
           POSTGRES_USER=${{ secrets.POSTGRES_USER }}
@@ -29,11 +29,11 @@ jobs:
           OLLAMA_MODEL=llama3.2:3b
           EOF
 
-          # Contar variables en el .env generado
-          GENERATED_COUNT=$(grep -c '=' .env || echo 0)
+          # Contar variables del .env generado
+          GENERATED_COUNT=$(grep -v '^#' .env | grep -v '^$' | grep -c '=' || echo 0)
           echo "📊 El .env generado tiene $GENERATED_COUNT variables"
 
-          # Validar que coincidan
+          # Validar integridad: ambos archivos deben tener la misma cantidad de variables
           if [ "$GENERATED_COUNT" -ne "$ORIGINAL_COUNT" ]; then
             echo "❌ ERROR: Las cantidades de variables no coinciden!"
             echo "   Esperadas: $ORIGINAL_COUNT variables (del .env del repo)"
