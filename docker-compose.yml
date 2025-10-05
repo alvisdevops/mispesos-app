@@ -37,6 +37,23 @@ services:
       timeout: 5s
       retries: 5
 
+  # Ollama AI Engine
+  ollama:
+    image: ollama/ollama:latest
+    container_name: mispesos-ollama
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - mispesos-network
+    restart: unless-stopped
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
 networks:
   mispesos-network:
     driver: bridge
@@ -47,3 +64,5 @@ volumes:
     name: mispesos-postgres-data
   redis_data:
     name: mispesos-redis-data
+  ollama_data:
+    name: mispesos-ollama-data

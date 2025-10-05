@@ -15,14 +15,35 @@ jobs:
 
       - name: Create .env file from secrets
         run: |
+          # Contar variables válidas del .env original (excluye comentarios y líneas vacías)
+          ORIGINAL_COUNT=$(grep -v '^#' .env | grep -v '^$' | grep -c '=' || echo 0)
+          echo "📊 El .env original tiene $ORIGINAL_COUNT variables"
+
+          # Generar .env con valores de secrets
           cat > .env << EOF
           POSTGRES_DB=${{ secrets.POSTGRES_DB }}
           POSTGRES_USER=${{ secrets.POSTGRES_USER }}
           POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}
           DATABASE_URL=postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres:5432/${{ secrets.POSTGRES_DB }}
+          OLLAMA_MODEL=llama3.2:3b
           EOF
-          echo "✅ .env file created"
+
+          # Contar variables del .env generado
+          GENERATED_COUNT=$(grep -v '^#' .env | grep -v '^$' | grep -c '=' || echo 0)
+          echo "📊 El .env generado tiene $GENERATED_COUNT variables"
+
+          # Validar integridad: ambos archivos deben tener la misma cantidad de variables
+          if [ "$GENERATED_COUNT" -ne "$ORIGINAL_COUNT" ]; then
+            echo "❌ ERROR: Las cantidades de variables no coinciden!"
+            echo "   Esperadas: $ORIGINAL_COUNT variables (del .env del repo)"
+            echo "   Generadas: $GENERATED_COUNT variables (en el workflow)"
+            echo ""
+            echo "💡 ¿Olvidaste agregar una variable nueva al workflow?"
+            exit 1
+          fi
+
+          echo "✅ Archivo .env creado y validado ($GENERATED_COUNT/$ORIGINAL_COUNT variables)"
 
       - name: Deploy with Docker Compose
         run: |
@@ -33,3 +54,28 @@ jobs:
           docker compose ps
           echo ""
           echo "✅ Deployment completed - only changed services were recreated"
+
+      - name: Setup Ollama AI model
+        run: |
+          echo "🤖 Checking Ollama AI model..."
+          # Wait for Ollama to be ready
+          for i in {1..30}; do
+            if docker compose exec -T ollama curl -sf http://localhost:11434/api/tags > /dev/null 2>&1; then
+              echo "✅ Ollama is ready"
+              break
+            fi
+            echo "⏳ Waiting for Ollama... ($i/30)"
+            sleep 5
+          done
+
+          # Check if model exists
+          MODEL=$(grep OLLAMA_MODEL .env | cut -d '=' -f2)
+          echo "📦 Checking for model: $MODEL"
+
+          if docker compose exec -T ollama ollama list | grep -q "$MODEL"; then
+            echo "✅ Model $MODEL already exists, skipping download"
+          else
+            echo "📥 Downloading model $MODEL (this may take several minutes on first run)..."
+            docker compose exec -T ollama ollama pull "$MODEL"
+            echo "✅ Model $MODEL downloaded successfully"
+          fi
