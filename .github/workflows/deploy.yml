@@ -15,14 +15,35 @@ jobs:
 
       - name: Create .env file from secrets
         run: |
+          # Contar variables en el .env original del repo
+          ORIGINAL_COUNT=$(grep -c '=' .env || echo 0)
+          echo "📊 El .env original tiene $ORIGINAL_COUNT variables"
+
+          # Crear .env con secrets
           cat > .env << EOF
           POSTGRES_DB=${{ secrets.POSTGRES_DB }}
           POSTGRES_USER=${{ secrets.POSTGRES_USER }}
           POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}
           DATABASE_URL=postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres:5432/${{ secrets.POSTGRES_DB }}
+          OLLAMA_MODEL=llama3.2:3b
           EOF
-          echo "✅ .env file created"
+
+          # Contar variables en el .env generado
+          GENERATED_COUNT=$(grep -c '=' .env || echo 0)
+          echo "📊 El .env generado tiene $GENERATED_COUNT variables"
+
+          # Validar que coincidan
+          if [ "$GENERATED_COUNT" -ne "$ORIGINAL_COUNT" ]; then
+            echo "❌ ERROR: Las cantidades de variables no coinciden!"
+            echo "   Esperadas: $ORIGINAL_COUNT variables (del .env del repo)"
+            echo "   Generadas: $GENERATED_COUNT variables (en el workflow)"
+            echo ""
+            echo "💡 ¿Olvidaste agregar una variable nueva al workflow?"
+            exit 1
+          fi
+
+          echo "✅ Archivo .env creado y validado ($GENERATED_COUNT/$ORIGINAL_COUNT variables)"
 
       - name: Deploy with Docker Compose
         run: |
