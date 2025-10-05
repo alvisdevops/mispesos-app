@@ -30,3 +30,28 @@ jobs:
           docker compose up -d --build
           docker compose ps
           echo "✅ Deployment completed"
+
+      - name: Setup Ollama AI model
+        run: |
+          echo "🤖 Checking Ollama AI model..."
+          # Wait for Ollama to be ready
+          for i in {1..30}; do
+            if docker compose exec -T ollama curl -sf http://localhost:11434/api/tags > /dev/null 2>&1; then
+              echo "✅ Ollama is ready"
+              break
+            fi
+            echo "⏳ Waiting for Ollama... ($i/30)"
+            sleep 5
+          done
+
+          # Check if model exists
+          MODEL=$(grep OLLAMA_MODEL .env | cut -d '=' -f2)
+          echo "📦 Checking for model: $MODEL"
+
+          if docker compose exec -T ollama ollama list | grep -q "$MODEL"; then
+            echo "✅ Model $MODEL already exists, skipping download"
+          else
+            echo "📥 Downloading model $MODEL (this may take several minutes on first run)..."
+            docker compose exec -T ollama ollama pull "$MODEL"
+            echo "✅ Model $MODEL downloaded successfully"
+          fi
