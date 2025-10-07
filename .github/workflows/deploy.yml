@@ -19,10 +19,7 @@ jobs:
           if [ ! -d "/var/lib/mispesos" ]; then
             echo "❌ ERROR: /var/lib/mispesos no existe"
             echo ""
-            echo "💡 Ejecuta estos comandos en el servidor:"
-            echo "   sudo mkdir -p /var/lib/mispesos/{postgres,redis,ollama}"
-            echo "   sudo chown -R devcris:devcris /var/lib/mispesos"
-            echo "   sudo chmod -R 755 /var/lib/mispesos"
+            echo "💡 Debes crear el directorio en el servidor"
             exit 1
           fi
           echo "✅ Directorios de datos verificados: /var/lib/mispesos"
@@ -54,7 +51,7 @@ jobs:
             echo "   Esperadas: $ORIGINAL_COUNT variables (del .env del repo)"
             echo "   Generadas: $GENERATED_COUNT variables (en el workflow)"
             echo ""
-            echo "💡 ¿Olvidaste agregar una variable nueva al workflow?"
+            echo "💡 Revisa el archivo .env y los secretos del repositorio deben tener la misma cantidad de variables"
             exit 1
           fi
 
@@ -68,7 +65,7 @@ jobs:
           echo "📊 Container Status:"
           docker compose ps
           echo ""
-          echo "✅ Deployment completed - only changed services were recreated"
+          echo "✅ Deployment completed successfully"
 
       - name: Setup Ollama AI model
         run: |
