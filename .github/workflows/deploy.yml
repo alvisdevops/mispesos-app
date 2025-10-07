@@ -13,6 +13,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Verify data directories exist
+        run: |
+          # Verificar que /var/lib/mispesos exista
+          if [ ! -d "/var/lib/mispesos" ]; then
+            echo "❌ ERROR: /var/lib/mispesos no existe"
+            echo ""
+            echo "💡 Debes crear el directorio en el servidor"
+            exit 1
+          fi
+          echo "✅ Directorios de datos verificados: /var/lib/mispesos"
+
       - name: Create .env file from secrets
         run: |
           # Contar variables válidas del .env original (excluye comentarios y líneas vacías)
@@ -27,6 +38,7 @@ jobs:
           POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}
           DATABASE_URL=postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres:5432/${{ secrets.POSTGRES_DB }}
           OLLAMA_MODEL=llama3.2:3b
+          DATA_PATH=/var/lib/mispesos
           EOF
 
           # Contar variables del .env generado
@@ -39,7 +51,7 @@ jobs:
             echo "   Esperadas: $ORIGINAL_COUNT variables (del .env del repo)"
             echo "   Generadas: $GENERATED_COUNT variables (en el workflow)"
             echo ""
-            echo "💡 ¿Olvidaste agregar una variable nueva al workflow?"
+            echo "💡 Revisa el archivo .env y los secretos del repositorio deben tener la misma cantidad de variables"
             exit 1
           fi
 
@@ -53,7 +65,7 @@ jobs:
           echo "📊 Container Status:"
           docker compose ps
           echo ""
-          echo "✅ Deployment completed - only changed services were recreated"
+          echo "✅ Deployment completed successfully"
 
       - name: Setup Ollama AI model
         run: |

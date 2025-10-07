@@ -86,3 +86,7 @@ coverage.xml
 
 # Redis dump
 dump.rdb
+
+#CLAUDE.AI
+.claude/
+CLAUDE.md
