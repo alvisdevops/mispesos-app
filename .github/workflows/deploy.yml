@@ -13,6 +13,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Verify data directories exist
+        run: |
+          # Verificar que /var/lib/mispesos exista
+          if [ ! -d "/var/lib/mispesos" ]; then
+            echo "❌ ERROR: /var/lib/mispesos no existe"
+            echo ""
+            echo "💡 Ejecuta estos comandos en el servidor:"
+            echo "   sudo mkdir -p /var/lib/mispesos/{postgres,redis,ollama}"
+            echo "   sudo chown -R devcris:devcris /var/lib/mispesos"
+            echo "   sudo chmod -R 755 /var/lib/mispesos"
+            exit 1
+          fi
+          echo "✅ Directorios de datos verificados: /var/lib/mispesos"
+
       - name: Create .env file from secrets
         run: |
           # Contar variables válidas del .env original (excluye comentarios y líneas vacías)
@@ -27,6 +41,7 @@ jobs:
           POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}
           DATABASE_URL=postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres:5432/${{ secrets.POSTGRES_DB }}
           OLLAMA_MODEL=llama3.2:3b
+          DATA_PATH=/var/lib/mispesos
           EOF
 
           # Contar variables del .env generado
