@@ -74,7 +74,7 @@ jobs:
           echo "🤖 Checking Ollama AI model..."
           # Wait for Ollama to be ready
           for i in {1..30}; do
-            if docker compose exec -T ollama curl -sf http://localhost:11434/api/tags > /dev/null 2>&1; then
+            if docker compose exec -T ollama ollama list > /dev/null 2>&1; then
               echo "✅ Ollama is ready"
               break
             fi
