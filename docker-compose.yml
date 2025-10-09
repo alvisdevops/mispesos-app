@@ -57,6 +57,42 @@ services:
       timeout: 10s
       retries: 3
 
+  # FastAPI Backend
+  fastapi:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mispesos-fastapi
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=redis://redis:6379/0
+      - OLLAMA_URL=http://ollama:11434
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - ENVIRONMENT=production
+      - DEBUG=False
+      - LOG_LEVEL=INFO
+    volumes:
+      # Bind mount: uploads y logs persistentes en /var/lib/mispesos
+      - ${DATA_PATH:-./data}/uploads:/app/uploads
+      - ${DATA_PATH:-./data}/logs:/app/logs
+    ports:
+      - "${FASTAPI_PORT:-8000}:8000"
+    networks:
+      - mispesos-network
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
 networks:
   mispesos-network:
     driver: bridge
