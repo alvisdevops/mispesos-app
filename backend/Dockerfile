@@ -27,7 +27,7 @@ RUN apt-get update \
         libtiff-dev \
         gfortran \
         openexr \
-        libatlas-base-dev \
+        libopenblas-dev \
         python3-dev \
         libtbb12 \
         libtbb-dev \
