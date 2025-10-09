@@ -13,7 +13,7 @@ RUN apt-get update \
         tesseract-ocr-spa \
         tesseract-ocr-eng \
         libtesseract-dev \
-        libgl1-mesa-glx \
+        libgl1 \
         libglib2.0-0 \
         libgtk2.0-dev \
         libavcodec-dev \
@@ -29,7 +29,7 @@ RUN apt-get update \
         openexr \
         libatlas-base-dev \
         python3-dev \
-        libtbb2 \
+        libtbb12 \
         libtbb-dev \
         libdc1394-dev \
         libopenexr-dev \
