@@ -68,7 +68,13 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - OLLAMA_URL=http://ollama:11434
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
-      - TELEGRAM_ALLOWED_USER_ID=${TELEGRAM_ALLOWED_USER_ID}
+      - ENVIRONMENT=production
+      - DEBUG=False
+      - LOG_LEVEL=INFO
+    volumes:
+      # Bind mount: uploads y logs persistentes en /var/lib/mispesos
+      - ${DATA_PATH:-./data}/uploads:/app/uploads
+      - ${DATA_PATH:-./data}/logs:/app/logs
     ports:
       - "${FASTAPI_PORT:-8000}:8000"
     networks:

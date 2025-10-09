@@ -40,7 +40,6 @@ jobs:
           OLLAMA_MODEL=llama3.2:3b
           FASTAPI_PORT=${{ secrets.FASTAPI_PORT }}
           TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_ALLOWED_USER_ID=${{ secrets.TELEGRAM_ALLOWED_USER_ID }}
           DATA_PATH=/var/lib/mispesos
           EOF
 
