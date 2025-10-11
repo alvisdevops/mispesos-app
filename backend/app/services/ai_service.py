@@ -11,8 +11,10 @@ from typing import Optional, Dict, Any, List
 from datetime import datetime, timedelta
 from loguru import logger
 from functools import lru_cache
+import time
 
 from app.core.config import settings
+from app.services.metrics_service import get_metrics_service
 
 
 class AIParsingResult:
@@ -36,16 +38,21 @@ class AIService:
     def __init__(self):
         self.base_url = settings.OLLAMA_URL
         self.model = settings.OLLAMA_MODEL
-        self.timeout = 60.0  # Increased from 30s to 60s for model processing
-        self.max_retries = 3
-        self.base_delay = 1.0  # Base delay for exponential backoff
+        self.timeout = 90.0  # Increased to 90s for more reliable processing
+        self.max_retries = 2  # Reduced to 2 retries for faster fallback
+        self.base_delay = 2.0  # Increased base delay between retries
         self._response_cache: Dict[str, tuple] = {}  # Cache for AI responses
         self.cache_ttl = 3600  # Cache TTL in seconds (1 hour)
+        self.metrics = get_metrics_service()
 
     async def parse_financial_message(self, message: str) -> AIParsingResult:
         """
         Parse a financial message using AI to extract structured data with retry logic and caching
         """
+        start_time = time.time()
+        from_cache = False
+        used_fallback = False
+
         try:
             # Normalize message for consistent caching
             normalized_message = message.strip().lower()
@@ -55,13 +62,28 @@ class AIService:
             cached_result = self._get_cached_response(cache_key)
             if cached_result:
                 logger.info("Using cached AI response")
-                return AIParsingResult(cached_result)
+                from_cache = True
+                result = AIParsingResult(cached_result)
+
+                # Record cache hit
+                latency = time.time() - start_time
+                self.metrics.ai_metrics.record_request(
+                    success=True,
+                    latency=latency,
+                    confidence=result.confidence,
+                    from_cache=True,
+                    used_fallback=False
+                )
+
+                return result
 
             # Create the prompt for financial parsing
             prompt = self._create_financial_prompt(message)
 
             # Call Ollama API with retry logic
             response = await self._call_ollama_with_retry(prompt)
+
+            latency = time.time() - start_time
 
             if response:
                 # Parse the AI response
@@ -70,19 +92,60 @@ class AIService:
 
                 # If parsing was successful, cache and return it
                 if result.success and result.confidence > 0.6:
-                    logger.info(f"AI parsing successful with confidence {result.confidence}")
+                    logger.info(f"AI parsing successful with confidence {result.confidence} (latency: {latency:.2f}s)")
                     self._cache_response(cache_key, parsed_data)
+
+                    # Record successful request
+                    self.metrics.ai_metrics.record_request(
+                        success=True,
+                        latency=latency,
+                        confidence=result.confidence,
+                        from_cache=False,
+                        used_fallback=False
+                    )
+
                     return result
                 else:
                     logger.warning(f"AI parsing low confidence ({result.confidence}), falling back to regex")
+                    used_fallback = True
+
+                    # Record low confidence as partial success
+                    self.metrics.ai_metrics.record_request(
+                        success=False,
+                        latency=latency,
+                        confidence=result.confidence,
+                        from_cache=False,
+                        used_fallback=True
+                    )
+
                     return await self._fallback_regex_parsing(message)
             else:
                 # Fallback to regex parsing
                 logger.warning("AI parsing failed after retries, falling back to regex")
+                used_fallback = True
+
+                # Record failed request
+                self.metrics.ai_metrics.record_request(
+                    success=False,
+                    latency=latency,
+                    from_cache=False,
+                    used_fallback=True
+                )
+
                 return await self._fallback_regex_parsing(message)
 
         except Exception as e:
             logger.error(f"AI parsing error: {e}")
+            latency = time.time() - start_time
+
+            # Record error
+            self.metrics.ai_metrics.record_request(
+                success=False,
+                latency=latency,
+                from_cache=False,
+                used_fallback=True
+            )
+
             # Fallback to regex parsing
             return await self._fallback_regex_parsing(message)
 
@@ -136,6 +199,7 @@ Responde ÚNICAMENTE con un JSON válido, sin explicaciones adicionales:
 
     async def _call_ollama_with_retry(self, prompt: str) -> Optional[str]:
         """Call Ollama API with exponential backoff retry logic"""
+        timeout_occurred = False
 
         for attempt in range(self.max_retries):
             try:
@@ -152,6 +216,25 @@ Responde ÚNICAMENTE con un JSON válido, sin explicaciones adicionales:
                     logger.warning(f"AI request failed, retrying in {delay}s...")
                     await asyncio.sleep(delay)
 
+            except asyncio.TimeoutError:
+                timeout_occurred = True
+                logger.error(f"AI request attempt {attempt + 1} timed out")
+
+                # Track timeout in metrics
+                if attempt == self.max_retries - 1:
+                    self.metrics.ai_metrics.record_request(
+                        success=False,
+                        latency=self.timeout,
+                        timeout=True,
+                        from_cache=False
+                    )
+
+                # If it's not the last attempt, wait before retrying
+                if attempt < self.max_retries - 1:
+                    delay = self.base_delay * (2 ** attempt)
+                    logger.warning(f"Retrying in {delay}s...")
+                    await asyncio.sleep(delay)
+
             except Exception as e:
                 logger.error(f"AI request attempt {attempt + 1} failed: {e}")
 
@@ -161,7 +244,7 @@ Responde ÚNICAMENTE con un JSON válido, sin explicaciones adicionales:
                     logger.warning(f"Retrying in {delay}s...")
                     await asyncio.sleep(delay)
 
-        logger.error(f"All {self.max_retries} AI request attempts failed")
+        logger.error(f"All {self.max_retries} AI request attempts failed (timeout: {timeout_occurred})")
         return None
 
     async def _call_ollama(self, prompt: str) -> Optional[str]:

@@ -4,9 +4,35 @@ Telegram bot callback handlers for inline keyboard buttons
 
 from telegram import Update
 from telegram.ext import Application, CallbackQueryHandler, ContextTypes
+from telegram.error import BadRequest
 from loguru import logger
 
 from app.services.api_client import APIClient
+
+
+async def safe_edit_message(query, text: str) -> bool:
+    """
+    Safely edit a message, handling expired queries gracefully
+    Returns True if successful, False if query expired
+    """
+    try:
+        await query.edit_message_text(text)
+        return True
+    except BadRequest as e:
+        if "message is not modified" in str(e).lower():
+            # Message content is the same, not an error
+            logger.debug("Message content unchanged, skipping edit")
+            return True
+        elif "query is too old" in str(e).lower() or "message to edit not found" in str(e).lower():
+            logger.warning(f"Cannot edit message: {e}")
+            return False
+        else:
+            # Other BadRequest errors, log and return False
+            logger.error(f"Error editing message: {e}")
+            return False
+    except Exception as e:
+        logger.error(f"Unexpected error editing message: {e}")
+        return False
 
 
 async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -18,8 +44,18 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
 
     logger.info(f"Processing callback query from user {user_id}: {data}")
 
-    # Answer the callback query to remove loading state
-    await query.answer()
+    try:
+        # Answer the callback query to remove loading state
+        # This must be done within 30 seconds or the query expires
+        await query.answer()
+    except BadRequest as e:
+        if "query is too old" in str(e).lower():
+            logger.warning(f"Callback query expired for user {user_id}: {data}")
+            # Query is too old, cannot be answered - just log and continue
+            return
+        else:
+            # Other BadRequest errors, re-raise
+            raise
 
     try:
         if data.startswith("validate_"):
@@ -54,11 +90,11 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
 
         else:
             logger.warning(f"Unknown callback data: {data}")
-            await query.edit_message_text("❌ Acción no reconocida")
+            await safe_edit_message(query, "❌ Acción no reconocida")
 
     except Exception as e:
         logger.error(f"Error handling callback query: {e}")
-        await query.edit_message_text("❌ Ocurrió un error. Intenta de nuevo.")
+        await safe_edit_message(query, "❌ Ocurrió un error. Intenta de nuevo.")
 
 
 async def handle_validate_transaction(query, context: ContextTypes.DEFAULT_TYPE, data: str) -> None:
@@ -72,20 +108,22 @@ async def handle_validate_transaction(query, context: ContextTypes.DEFAULT_TYPE,
         success = await api_client.validate_transaction(transaction_id)
 
         if success:
-            await query.edit_message_text(
+            await safe_edit_message(
+                query,
                 f"✅ **Transacción #{transaction_id} validada**\n\n"
                 "La transacción ha sido marcada como correcta.\n"
                 "Esto ayuda a mejorar la precisión del sistema de IA."
             )
         else:
-            await query.edit_message_text(
+            await safe_edit_message(
+                query,
                 f"❌ **Error al validar transacción #{transaction_id}**\n\n"
                 "No se pudo encontrar o validar la transacción."
             )
 
     except Exception as e:
         logger.error(f"Error validating transaction {transaction_id}: {e}")
-        await query.edit_message_text("❌ Error al validar. Intenta de nuevo.")
+        await safe_edit_message(query, "❌ Error al validar. Intenta de nuevo.")
 
 
 async def handle_edit_transaction(query, context: ContextTypes.DEFAULT_TYPE, data: str) -> None:
@@ -104,7 +142,7 @@ async def handle_edit_transaction(query, context: ContextTypes.DEFAULT_TYPE, dat
     message += "   Escribe: 'categoria [nombre_categoria]'\n\n"
     message += "💡 **Próximamente:** Interface de edición completa"
 
-    await query.edit_message_text(message)
+    await safe_edit_message(query, message)
 
 
 async def handle_delete_transaction(query, context: ContextTypes.DEFAULT_TYPE, data: str) -> None:
@@ -161,7 +199,7 @@ async def handle_summary_callback(query, context: ContextTypes.DEFAULT_TYPE, per
                     percentage = (amount / summary['total_amount']) * 100
                     message += f"• {category}: ${amount:,.0f} ({percentage:.1f}%)\n"
 
-            await query.edit_message_text(message)
+            await safe_edit_message(query, message)
 
         else:
             await query.edit_message_text(
@@ -192,7 +230,7 @@ async def handle_balance_callback(query, context: ContextTypes.DEFAULT_TYPE) -> 
         message += f"📅 Semana: ${week['total_amount']:,.0f}\n" if week else "📅 Semana: $0\n"
         message += f"📅 Mes: ${month['total_amount']:,.0f}\n" if month else "📅 Mes: $0\n"
 
-        await query.edit_message_text(message)
+        await safe_edit_message(query, message)
 
     except Exception as e:
         logger.error(f"Error getting balance: {e}")
@@ -217,7 +255,7 @@ async def handle_categories_callback(query, context: ContextTypes.DEFAULT_TYPE) 
             if len(categories) > 8:
                 message += f"\n... y {len(categories) - 8} más"
 
-            await query.edit_message_text(message)
+            await safe_edit_message(query, message)
 
         else:
             await query.edit_message_text("❌ Error al cargar categorías.")
