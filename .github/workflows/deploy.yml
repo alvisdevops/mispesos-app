@@ -30,6 +30,10 @@ jobs:
           ORIGINAL_COUNT=$(grep -v '^#' .env | grep -v '^$' | grep -c '=' || echo 0)
           echo "📊 El .env original tiene $ORIGINAL_COUNT variables"
 
+          # Extraer OLLAMA_MODEL del .env del repositorio (única fuente de verdad)
+          OLLAMA_MODEL=$(grep OLLAMA_MODEL .env | cut -d '=' -f2)
+          echo "🤖 Using Ollama model from repo: $OLLAMA_MODEL"
+
           # Generar .env con valores de secrets
           cat > .env << EOF
           POSTGRES_DB=${{ secrets.POSTGRES_DB }}
@@ -37,7 +41,7 @@ jobs:
           POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}
           DATABASE_URL=postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres:5432/${{ secrets.POSTGRES_DB }}
-          OLLAMA_MODEL=llama3.2:3b
+          OLLAMA_MODEL=$OLLAMA_MODEL
           FASTAPI_PORT=${{ secrets.FASTAPI_PORT }}
           TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
           DATA_PATH=/var/lib/mispesos
