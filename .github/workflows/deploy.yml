@@ -62,7 +62,7 @@ jobs:
       - name: Deploy with Docker Compose
         run: |
           echo "🚀 Starting deployment..."
-          docker compose up -d
+          docker compose up -d --build
           echo ""
           echo "📊 Container Status:"
           docker compose ps
