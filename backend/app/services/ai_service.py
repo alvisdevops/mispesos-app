@@ -36,7 +36,7 @@ class AIService:
     def __init__(self):
         self.base_url = settings.OLLAMA_URL
         self.model = settings.OLLAMA_MODEL
-        self.timeout = 30.0
+        self.timeout = 60.0  # Increased from 30s to 60s for model processing
         self.max_retries = 3
         self.base_delay = 1.0  # Base delay for exponential backoff
         self._response_cache: Dict[str, tuple] = {}  # Cache for AI responses
