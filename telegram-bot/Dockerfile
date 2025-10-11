@@ -21,5 +21,5 @@ COPY . .
 # Create necessary directories
 RUN mkdir -p temp logs
 
-# Run the bot using module syntax to ensure proper imports
-CMD ["python", "-m", "app.main"]
+# Run the bot
+CMD ["python", "app/main.py"]
