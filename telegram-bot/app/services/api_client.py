@@ -14,7 +14,7 @@ class APIClient:
 
     def __init__(self):
         self.base_url = settings.FASTAPI_URL
-        self.timeout = 30.0
+        self.timeout = 90.0  # Increased from 30s to 90s for AI processing
 
     async def parse_message(
         self,

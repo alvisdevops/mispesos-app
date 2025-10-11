@@ -98,12 +98,21 @@ Mensaje: "{message}"
 
 Debes extraer:
 - amount: monto numérico (solo números, sin símbolos)
-- description: descripción del gasto
+- description: QUÉ se compró o el servicio/producto (NO el método de pago). Ejemplos: "almuerzo", "Uber", "gasolina", "pizza"
 - category: categoría más probable (alimentacion, transporte, servicios, entretenimiento, salud, ropa, educacion, casa, otros)
-- payment_method: método de pago (tarjeta, efectivo, transferencia, debito)
+- payment_method: CÓMO se pagó (tarjeta, efectivo, transferencia, debito) - busca al FINAL del mensaje
 - location: lugar si se menciona
 - date_offset: días desde hoy (0=hoy, -1=ayer, 1=mañana)
 - confidence: nivel de confianza (0.0 a 1.0)
+
+IMPORTANTE:
+- La descripción debe ser el producto/servicio, NO el método de pago
+- El método de pago usualmente aparece al final: "tarjeta", "efectivo", "transferencia", "débito"
+
+Ejemplos:
+- "30k en Uber transferencia" → description: "Uber", payment_method: "transferencia"
+- "50k almuerzo tarjeta" → description: "almuerzo", payment_method: "tarjeta"
+- "pague 25000 gasolina efectivo" → description: "gasolina", payment_method: "efectivo"
 
 Formatos de dinero válidos:
 - "50k" = 50000
