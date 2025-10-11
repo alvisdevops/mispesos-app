@@ -1,0 +1,29 @@
+# Telegram Bot
+python-telegram-bot==20.7
+
+# HTTP clients for API communication
+httpx==0.25.2
+requests==2.31.0
+
+# AI integration
+ollama==0.1.7
+
+# Redis
+redis==5.0.1
+
+# Configuration
+python-dotenv==1.0.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Logging
+loguru==0.7.2
+
+# Image processing
+Pillow==10.1.0
+
+# Utilities
+pytz==2023.3
+
+# Development
+watchdog==3.0.0  # For hot reload in development
