@@ -21,5 +21,8 @@ COPY . .
 # Create necessary directories
 RUN mkdir -p temp logs
 
+# Set PYTHONPATH to include /app so app.* imports work
+ENV PYTHONPATH=/app
+
 # Run the bot
 CMD ["python", "app/main.py"]
