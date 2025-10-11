@@ -80,11 +80,20 @@ async def main():
 
         logger.info("✅ Bot is running! Press Ctrl+C to stop.")
 
+        # Create health check file
+        with open('/tmp/bot_healthy', 'w') as f:
+            f.write('OK')
+
         # Wait for stop signal
         await stop_event.wait()
 
         # Graceful shutdown
         logger.info("🔄 Shutting down bot...")
+
+        # Remove health check file
+        if os.path.exists('/tmp/bot_healthy'):
+            os.remove('/tmp/bot_healthy')
+
         await application.updater.stop()
         await application.stop()
         await application.shutdown()

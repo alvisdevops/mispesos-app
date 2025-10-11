@@ -15,14 +15,11 @@ COPY requirements.txt .
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
-COPY . .
+# Copy only application code (not Dockerfile, etc.)
+COPY app/ ./app/
 
 # Create necessary directories
 RUN mkdir -p temp logs
 
-# Set PYTHONPATH to include /app so app.* imports work
-ENV PYTHONPATH=/app
-
-# Run the bot
-CMD ["python", "app/main.py"]
+# Run the bot using module syntax for proper imports
+CMD ["python", "-m", "app.main"]
