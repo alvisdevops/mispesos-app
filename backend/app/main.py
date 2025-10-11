@@ -3,6 +3,7 @@ MisPesos FastAPI Backend
 Main application entry point
 """
 
+import asyncio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
@@ -16,19 +17,14 @@ from app.api import api_router
 from app.models import transaction, category, receipt
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """Application lifespan events"""
-    # Startup
-    print("🚀 MisPesos FastAPI starting up...")
+async def warmup_ollama_background():
+    """Background task to pre-warm Ollama model after startup"""
+    # Wait a bit to ensure FastAPI is fully started and healthy
+    await asyncio.sleep(5)
 
-    # Create database tables
-    print("📊 Creating database tables...")
-    Base.metadata.create_all(bind=engine)
-    print("✅ Database tables created successfully")
+    print("🔥 Starting Ollama pre-warming in background...")
+    logger.info("Starting Ollama pre-warming in background")
 
-    # Pre-warm Ollama model
-    print("🔥 Pre-warming Ollama model...")
     try:
         from app.services.ai_service import AIService
         ai_service = AIService()
@@ -42,10 +38,26 @@ async def lifespan(app: FastAPI):
             logger.info("Ollama model pre-warmed and ready")
         else:
             print("⚠️  Ollama not available - skipping pre-warm")
-            logger.warning("Ollama not available during startup")
+            logger.warning("Ollama not available for pre-warming")
     except Exception as e:
         print(f"⚠️  Ollama pre-warm failed: {e}")
         logger.warning(f"Ollama pre-warm failed: {e} - will work on first request")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan events"""
+    # Startup
+    print("🚀 MisPesos FastAPI starting up...")
+
+    # Create database tables
+    print("📊 Creating database tables...")
+    Base.metadata.create_all(bind=engine)
+    print("✅ Database tables created successfully")
+
+    # Schedule Ollama pre-warming as background task (non-blocking)
+    asyncio.create_task(warmup_ollama_background())
+    print("🔥 Ollama pre-warming scheduled in background")
 
     yield
 
