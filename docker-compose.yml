@@ -94,6 +94,36 @@ services:
       timeout: 10s
       retries: 3
 
+  # Telegram Bot
+  telegram-bot:
+    build:
+      context: ./telegram-bot
+      dockerfile: Dockerfile
+    container_name: mispesos-telegram-bot
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - FASTAPI_URL=http://fastapi:8000
+      - OLLAMA_URL=http://ollama:11434
+      - REDIS_URL=redis://redis:6379
+      - ENVIRONMENT=production
+      - DEBUG=False
+      - LOG_LEVEL=INFO
+      - USE_POLLING=True
+    volumes:
+      # Bind mount: temp y logs persistentes en /var/lib/mispesos
+      - ${DATA_PATH:-./data}/bot_temp:/app/temp
+      - ${DATA_PATH:-./data}/logs:/app/logs
+    networks:
+      - mispesos-network
+    depends_on:
+      fastapi:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+    restart: unless-stopped
+
 networks:
   mispesos-network:
     driver: bridge
