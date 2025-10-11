@@ -6,6 +6,7 @@ Main application entry point
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+from loguru import logger
 
 from app.core.config import settings
 from app.core.database import engine, Base
@@ -25,6 +26,26 @@ async def lifespan(app: FastAPI):
     print("📊 Creating database tables...")
     Base.metadata.create_all(bind=engine)
     print("✅ Database tables created successfully")
+
+    # Pre-warm Ollama model
+    print("🔥 Pre-warming Ollama model...")
+    try:
+        from app.services.ai_service import AIService
+        ai_service = AIService()
+
+        # Test connection first
+        is_connected = await ai_service.test_connection()
+        if is_connected:
+            # Send dummy message to initialize model
+            await ai_service.parse_financial_message("warmup test 1000")
+            print("✅ Ollama model pre-warmed successfully")
+            logger.info("Ollama model pre-warmed and ready")
+        else:
+            print("⚠️  Ollama not available - skipping pre-warm")
+            logger.warning("Ollama not available during startup")
+    except Exception as e:
+        print(f"⚠️  Ollama pre-warm failed: {e}")
+        logger.warning(f"Ollama pre-warm failed: {e} - will work on first request")
 
     yield
 
