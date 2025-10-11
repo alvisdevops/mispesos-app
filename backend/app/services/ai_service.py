@@ -15,6 +15,7 @@ import time
 
 from app.core.config import settings
 from app.services.metrics_service import get_metrics_service
+from app.services.prometheus_metrics import track_ai_request, track_ollama_request, AIRequestTracker
 
 
 class AIParsingResult:
@@ -53,14 +54,16 @@ class AIService:
         from_cache = False
         used_fallback = False
 
-        try:
-            # Normalize message for consistent caching
-            normalized_message = message.strip().lower()
-            cache_key = self._get_cache_key(normalized_message)
+        # Track active request in Prometheus
+        with AIRequestTracker():
+            try:
+                # Normalize message for consistent caching
+                normalized_message = message.strip().lower()
+                cache_key = self._get_cache_key(normalized_message)
 
-            # Check cache first
-            cached_result = self._get_cached_response(cache_key)
-            if cached_result:
+                # Check cache first
+                cached_result = self._get_cached_response(cache_key)
+                if cached_result:
                 logger.info("Using cached AI response")
                 from_cache = True
                 result = AIParsingResult(cached_result)
@@ -72,6 +75,16 @@ class AIService:
                     latency=latency,
                     confidence=result.confidence,
                     from_cache=True,
+                    used_fallback=False
+                )
+
+                # Track in Prometheus
+                track_ai_request(
+                    duration=latency,
+                    success=True,
+                    confidence=result.confidence,
+                    from_cache=True,
+                    timeout=False,
                     used_fallback=False
                 )
 
