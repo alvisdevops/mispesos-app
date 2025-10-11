@@ -51,6 +51,9 @@ services:
     restart: unless-stopped
     environment:
       - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_KEEP_ALIVE=-1  # Keep model loaded in memory indefinitely
+      - OLLAMA_NUM_PARALLEL=1  # Process one request at a time for consistency
+      - OLLAMA_MAX_LOADED_MODELS=1  # Only keep one model in memory
     healthcheck:
       test: ["CMD-SHELL", "ollama list > /dev/null 2>&1 || exit 1"]
       interval: 30s

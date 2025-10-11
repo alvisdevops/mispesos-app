@@ -175,10 +175,13 @@ Responde ÚNICAMENTE con un JSON válido, sin explicaciones adicionales:
                         "model": self.model,
                         "prompt": prompt,
                         "stream": False,
+                        "keep_alive": -1,  # Keep model in memory
                         "options": {
                             "temperature": 0.1,  # Low temperature for consistency
                             "top_p": 0.9,
-                            "max_tokens": 200
+                            "num_predict": 150,  # Limit output tokens for speed
+                            "num_ctx": 1024,  # Smaller context window for speed
+                            "num_thread": 4  # Optimize CPU threads
                         }
                     }
                 )
