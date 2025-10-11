@@ -81,8 +81,8 @@ CREATE TABLE IF NOT EXISTS transactions (
     original_text TEXT,
 
     -- Telegram integration
-    telegram_message_id INTEGER,
-    telegram_user_id INTEGER NOT NULL,
+    telegram_message_id BIGINT,
+    telegram_user_id BIGINT NOT NULL,
 
     -- Status and validation
     is_validated BOOLEAN DEFAULT FALSE,

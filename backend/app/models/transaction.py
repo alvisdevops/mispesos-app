@@ -2,7 +2,7 @@
 Transaction model - Core financial transaction data
 """
 
-from sqlalchemy import Column, Integer, String, Float, DateTime, Boolean, Text, ForeignKey
+from sqlalchemy import Column, Integer, BigInteger, String, Float, DateTime, Boolean, Text, ForeignKey
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 
@@ -33,8 +33,8 @@ class Transaction(Base):
     original_text = Column(Text, nullable=True)  # Original user message
 
     # Telegram integration
-    telegram_message_id = Column(Integer, nullable=True, index=True)
-    telegram_user_id = Column(Integer, nullable=False, index=True)
+    telegram_message_id = Column(BigInteger, nullable=True, index=True)
+    telegram_user_id = Column(BigInteger, nullable=False, index=True)
 
     # Status and validation
     is_validated = Column(Boolean, default=False)  # User confirmed the transaction
