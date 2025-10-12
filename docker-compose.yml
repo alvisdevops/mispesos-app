@@ -147,7 +147,7 @@ services:
   prometheus:
     image: prom/prometheus:latest
     container_name: mispesos-prometheus
-    user: "nobody"
+    user: "1000:1000"
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -177,6 +177,7 @@ services:
   grafana:
     image: grafana/grafana:latest
     container_name: mispesos-grafana
+    user: "1000:1000"
     environment:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
