@@ -177,6 +177,7 @@ services:
   tempo:
     image: grafana/tempo:latest
     container_name: mispesos-tempo
+    user: "1000:1000"
     command: ["-config.file=/etc/tempo.yml"]
     volumes:
       - ./monitoring/tempo/tempo.yml:/etc/tempo.yml:ro
@@ -204,6 +205,7 @@ services:
   loki:
     image: grafana/loki:latest
     container_name: mispesos-loki
+    user: "1000:1000"
     command: ["-config.file=/etc/loki/local-config.yml"]
     volumes:
       - ./monitoring/loki/loki.yml:/etc/loki/local-config.yml:ro
@@ -229,6 +231,7 @@ services:
   promtail:
     image: grafana/promtail:latest
     container_name: mispesos-promtail
+    user: "1000:1000"
     command: ["-config.file=/etc/promtail/config.yml"]
     volumes:
       - ./monitoring/promtail/promtail.yml:/etc/promtail/config.yml:ro
