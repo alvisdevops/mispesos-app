@@ -64,34 +64,34 @@ class AIService:
                 # Check cache first
                 cached_result = self._get_cached_response(cache_key)
                 if cached_result:
-                logger.info("Using cached AI response")
-                from_cache = True
-                result = AIParsingResult(cached_result)
+                    logger.info("Using cached AI response")
+                    from_cache = True
+                    result = AIParsingResult(cached_result)
 
-                # Record cache hit
-                latency = time.time() - start_time
-                self.metrics.ai_metrics.record_request(
-                    success=True,
-                    latency=latency,
-                    confidence=result.confidence,
-                    from_cache=True,
-                    used_fallback=False
-                )
+                    # Record cache hit
+                    latency = time.time() - start_time
+                    self.metrics.ai_metrics.record_request(
+                        success=True,
+                        latency=latency,
+                        confidence=result.confidence,
+                        from_cache=True,
+                        used_fallback=False
+                    )
 
-                # Track in Prometheus
-                track_ai_request(
-                    duration=latency,
-                    success=True,
-                    confidence=result.confidence,
-                    from_cache=True,
-                    timeout=False,
-                    used_fallback=False
-                )
+                    # Track in Prometheus
+                    track_ai_request(
+                        duration=latency,
+                        success=True,
+                        confidence=result.confidence,
+                        from_cache=True,
+                        timeout=False,
+                        used_fallback=False
+                    )
 
-                return result
+                    return result
 
-            # Create the prompt for financial parsing
-            prompt = self._create_financial_prompt(message)
+                # Create the prompt for financial parsing
+                prompt = self._create_financial_prompt(message)
 
             # Call Ollama API with retry logic
             response = await self._call_ollama_with_retry(prompt)
