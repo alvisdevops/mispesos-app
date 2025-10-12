@@ -234,6 +234,8 @@ services:
       - ./monitoring/promtail/promtail.yml:/etc/promtail/config.yml:ro
       # Bind mount: logs persistentes en /var/lib/mispesos
       - ${DATA_PATH:-./data}/logs:/var/log/mispesos:ro
+      # Bind mount: positions file persistente
+      - ${DATA_PATH:-./data}/promtail:/var/promtail
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
     networks:
       - mispesos-network
