@@ -32,10 +32,6 @@ async def lifespan(app: FastAPI):
     print("📝 Configuring structured logging...")
     setup_logging()
 
-    # Setup OpenTelemetry tracing
-    print("🔍 Configuring OpenTelemetry tracing...")
-    setup_telemetry(app)
-
     # Create database tables
     print("📊 Creating database tables...")
     Base.metadata.create_all(bind=engine)
@@ -54,6 +50,10 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
+
+# Setup OpenTelemetry tracing BEFORE any middleware
+print("🔍 Configuring OpenTelemetry tracing...")
+setup_telemetry(app)
 
 # Add CORS middleware
 app.add_middleware(

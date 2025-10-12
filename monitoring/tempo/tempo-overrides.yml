@@ -1,0 +1,24 @@
+overrides:
+  # Configuraciones por tenant (usuario)
+  # Por defecto, todos los usuarios comparten esta configuración
+
+  # Configuración global para todos los tenants
+  defaults:
+    # Límites de ingesta
+    ingestion_rate_limit_bytes: 15000000  # 15MB/s por usuario
+    ingestion_burst_size_bytes: 20000000  # 20MB burst
+
+    # Límites de traces
+    max_traces_per_user: 10000
+    max_global_traces_per_user: 100000
+
+    # Retención y compactación
+    block_retention: 168h  # 7 días
+
+    # Generador de métricas
+    metrics_generator_max_active_series: 10000
+
+  # Ejemplo: Configuración específica para un usuario de prueba
+  # "user-1":
+  #   ingestion_rate_limit_bytes: 5000000  # 5MB/s
+  #   max_traces_per_user: 5000

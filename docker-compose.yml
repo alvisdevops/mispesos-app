@@ -181,6 +181,7 @@ services:
     command: ["-config.file=/etc/tempo.yml"]
     volumes:
       - ./monitoring/tempo/tempo.yml:/etc/tempo.yml:ro
+      - ./monitoring/tempo/tempo-overrides.yml:/etc/tempo-overrides.yml:ro
       # Bind mount: data persistente en /var/lib/mispesos
       - ${DATA_PATH:-./data}/tempo:/var/tempo
     ports:

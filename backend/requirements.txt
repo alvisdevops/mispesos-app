@@ -30,7 +30,7 @@ ollama==0.1.7
 
 # Image processing and OCR
 Pillow==10.1.0
-opencv-python==4.8.1.78
+opencv-python-headless==4.10.0.84
 pytesseract==0.3.10
 
 # Utilities
