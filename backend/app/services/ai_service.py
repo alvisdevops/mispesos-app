@@ -93,51 +93,65 @@ class AIService:
                 # Create the prompt for financial parsing
                 prompt = self._create_financial_prompt(message)
 
-            # Call Ollama API with retry logic
-            response = await self._call_ollama_with_retry(prompt)
+                # Call Ollama API with retry logic
+                response = await self._call_ollama_with_retry(prompt)
 
-            latency = time.time() - start_time
+                latency = time.time() - start_time
 
-            if response:
-                # Parse the AI response
-                parsed_data = self._parse_ai_response(response, message)
-                result = AIParsingResult(parsed_data)
+                if response:
+                    # Parse the AI response
+                    parsed_data = self._parse_ai_response(response, message)
+                    result = AIParsingResult(parsed_data)
 
-                # If parsing was successful, cache and return it
-                if result.success and result.confidence > 0.6:
-                    logger.info(f"AI parsing successful with confidence {result.confidence} (latency: {latency:.2f}s)")
-                    self._cache_response(cache_key, parsed_data)
+                    # If parsing was successful, cache and return it
+                    if result.success and result.confidence > 0.6:
+                        logger.info(f"AI parsing successful with confidence {result.confidence} (latency: {latency:.2f}s)")
+                        self._cache_response(cache_key, parsed_data)
 
-                    # Record successful request
-                    self.metrics.ai_metrics.record_request(
-                        success=True,
-                        latency=latency,
-                        confidence=result.confidence,
-                        from_cache=False,
-                        used_fallback=False
-                    )
+                        # Record successful request
+                        self.metrics.ai_metrics.record_request(
+                            success=True,
+                            latency=latency,
+                            confidence=result.confidence,
+                            from_cache=False,
+                            used_fallback=False
+                        )
 
-                    return result
+                        return result
+                    else:
+                        logger.warning(f"AI parsing low confidence ({result.confidence}), falling back to regex")
+                        used_fallback = True
+
+                        # Record low confidence as partial success
+                        self.metrics.ai_metrics.record_request(
+                            success=False,
+                            latency=latency,
+                            confidence=result.confidence,
+                            from_cache=False,
+                            used_fallback=True
+                        )
+
+                        return await self._fallback_regex_parsing(message)
                 else:
-                    logger.warning(f"AI parsing low confidence ({result.confidence}), falling back to regex")
+                    # Fallback to regex parsing
+                    logger.warning("AI parsing failed after retries, falling back to regex")
                     used_fallback = True
 
-                    # Record low confidence as partial success
+                    # Record failed request
                     self.metrics.ai_metrics.record_request(
                         success=False,
                         latency=latency,
-                        confidence=result.confidence,
                         from_cache=False,
                         used_fallback=True
                     )
 
                     return await self._fallback_regex_parsing(message)
-            else:
-                # Fallback to regex parsing
-                logger.warning("AI parsing failed after retries, falling back to regex")
-                used_fallback = True
 
-                # Record failed request
+            except Exception as e:
+                logger.error(f"AI parsing error: {e}")
+                latency = time.time() - start_time
+
+                # Record error
                 self.metrics.ai_metrics.record_request(
                     success=False,
                     latency=latency,
@@ -145,22 +159,8 @@ class AIService:
                     used_fallback=True
                 )
 
+                # Fallback to regex parsing
                 return await self._fallback_regex_parsing(message)
-
-        except Exception as e:
-            logger.error(f"AI parsing error: {e}")
-            latency = time.time() - start_time
-
-            # Record error
-            self.metrics.ai_metrics.record_request(
-                success=False,
-                latency=latency,
-                from_cache=False,
-                used_fallback=True
-            )
-
-            # Fallback to regex parsing
-            return await self._fallback_regex_parsing(message)
 
     def _create_financial_prompt(self, message: str) -> str:
         """Create a structured prompt for financial message parsing"""
