@@ -154,6 +154,7 @@ services:
       - '--web.console.libraries=/etc/prometheus/console_libraries'
       - '--web.console.templates=/etc/prometheus/consoles'
       - '--web.enable-lifecycle'
+      - '--web.enable-remote-write-receiver'
     volumes:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ${DATA_PATH:-./data}/prometheus:/prometheus
@@ -232,7 +233,6 @@ services:
   promtail:
     image: grafana/promtail:latest
     container_name: mispesos-promtail
-    user: "1000:1000"
     command: ["-config.file=/etc/promtail/config.yml"]
     volumes:
       - ./monitoring/promtail/promtail.yml:/etc/promtail/config.yml:ro
@@ -240,6 +240,8 @@ services:
       - ${DATA_PATH:-./data}/logs:/var/log/mispesos:ro
       # Bind mount: positions file persistente
       - ${DATA_PATH:-./data}/promtail:/var/promtail
+      # Docker socket access for container log discovery
+      - /var/run/docker.sock:/var/run/docker.sock:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
     networks:
       - mispesos-network

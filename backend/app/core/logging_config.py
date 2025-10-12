@@ -8,16 +8,12 @@ from loguru import logger
 from app.core.telemetry import get_current_trace_id, get_current_span_id
 
 
-def serialize_log(record):
+def patching_sink(message):
     """
-    Serialize log record to JSON with trace context
-
-    Args:
-        record: Loguru record
-
-    Returns:
-        JSON string with log data including trace context
+    Custom sink that patches log records to include trace context
+    and outputs as JSON
     """
+    record = message.record
     trace_id = get_current_trace_id()
     span_id = get_current_span_id()
 
@@ -38,9 +34,11 @@ def serialize_log(record):
 
     # Add extra fields from record
     if record["extra"]:
-        log_entry["extra"] = record["extra"]
+        for key, value in record["extra"].items():
+            if key not in log_entry:
+                log_entry[key] = value
 
-    return json.dumps(log_entry)
+    print(json.dumps(log_entry), flush=True)
 
 
 def setup_logging():
@@ -50,23 +48,20 @@ def setup_logging():
     # Remove default logger
     logger.remove()
 
-    # Add console logger with JSON format
+    # Add console logger with custom sink for JSON output
     logger.add(
-        sys.stdout,
-        format=serialize_log,
+        patching_sink,
         level="INFO",
-        serialize=True,
     )
 
-    # Add file logger with JSON format
+    # Add file logger with simple format
     logger.add(
         "/app/logs/mispesos-fastapi.log",
-        format=serialize_log,
         level="INFO",
+        format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} - {message}",
         rotation="100 MB",
         retention="7 days",
         compression="zip",
-        serialize=True,
     )
 
     logger.info("Logging configured with trace context support")
