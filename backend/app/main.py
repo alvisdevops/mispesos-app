@@ -12,6 +12,8 @@ import time
 
 from app.core.config import settings
 from app.core.database import engine, Base
+from app.core.telemetry import setup_telemetry
+from app.core.logging_config import setup_logging
 from app.api import api_router
 from app.services.prometheus_metrics import track_http_request
 from app.middleware import tracing_middleware
@@ -25,6 +27,14 @@ async def lifespan(app: FastAPI):
     """Application lifespan events"""
     # Startup
     print("🚀 MisPesos FastAPI starting up...")
+
+    # Setup structured logging with trace context
+    print("📝 Configuring structured logging...")
+    setup_logging()
+
+    # Setup OpenTelemetry tracing
+    print("🔍 Configuring OpenTelemetry tracing...")
+    setup_telemetry(app)
 
     # Create database tables
     print("📊 Creating database tables...")
