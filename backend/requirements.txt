@@ -30,7 +30,7 @@ ollama==0.1.7
 
 # Image processing and OCR
 Pillow==10.1.0
-opencv-python==4.8.1.78
+opencv-python-headless==4.10.0.84
 pytesseract==0.3.10
 
 # Utilities
@@ -47,3 +47,12 @@ flake8==6.1.0
 
 # Monitoring
 prometheus-client==0.19.0
+
+# OpenTelemetry for Tracing
+opentelemetry-api==1.22.0
+opentelemetry-sdk==1.22.0
+opentelemetry-instrumentation-fastapi==0.43b0
+opentelemetry-instrumentation-sqlalchemy==0.43b0
+opentelemetry-instrumentation-redis==0.43b0
+opentelemetry-instrumentation-httpx==0.43b0
+opentelemetry-exporter-otlp-proto-http==1.22.0

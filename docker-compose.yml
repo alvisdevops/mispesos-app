@@ -173,6 +173,86 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  # Tempo Tracing
+  tempo:
+    image: grafana/tempo:latest
+    container_name: mispesos-tempo
+    user: "1000:1000"
+    command: ["-config.file=/etc/tempo.yml"]
+    volumes:
+      - ./monitoring/tempo/tempo.yml:/etc/tempo.yml:ro
+      - ./monitoring/tempo/tempo-overrides.yml:/etc/tempo-overrides.yml:ro
+      # Bind mount: data persistente en /var/lib/mispesos
+      - ${DATA_PATH:-./data}/tempo:/var/tempo
+    ports:
+      - "3200:3200"  # Tempo HTTP
+      - "4317:4317"  # OTLP gRPC
+      - "4318:4318"  # OTLP HTTP
+    networks:
+      - mispesos-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3200/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Loki Logs
+  loki:
+    image: grafana/loki:latest
+    container_name: mispesos-loki
+    user: "1000:1000"
+    command: ["-config.file=/etc/loki/local-config.yml"]
+    volumes:
+      - ./monitoring/loki/loki.yml:/etc/loki/local-config.yml:ro
+      # Bind mount: data persistente en /var/lib/mispesos
+      - ${DATA_PATH:-./data}/loki:/loki
+    ports:
+      - "3100:3100"  # Loki HTTP
+    networks:
+      - mispesos-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3100/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Promtail Log Collector
+  promtail:
+    image: grafana/promtail:latest
+    container_name: mispesos-promtail
+    user: "1000:1000"
+    command: ["-config.file=/etc/promtail/config.yml"]
+    volumes:
+      - ./monitoring/promtail/promtail.yml:/etc/promtail/config.yml:ro
+      # Bind mount: logs persistentes en /var/lib/mispesos
+      - ${DATA_PATH:-./data}/logs:/var/log/mispesos:ro
+      # Bind mount: positions file persistente
+      - ${DATA_PATH:-./data}/promtail:/var/promtail
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    networks:
+      - mispesos-network
+    depends_on:
+      loki:
+        condition: service_healthy
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   # Grafana Dashboards
   grafana:
     image: grafana/grafana:latest
@@ -193,6 +273,10 @@ services:
       - mispesos-network
     depends_on:
       prometheus:
+        condition: service_healthy
+      tempo:
+        condition: service_healthy
+      loki:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
