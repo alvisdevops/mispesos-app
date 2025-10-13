@@ -8,8 +8,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-mispesos_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
     volumes:
-      # Bind mount: data persistente en /var/lib/mispesos
-      - ${DATA_PATH:-./data}/postgres:/var/lib/postgresql/data
+      # Named volume: data persistente dentro de Docker
+      - mispesos-postgres-data:/var/lib/postgresql/data
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
@@ -28,8 +28,8 @@ services:
     container_name: mispesos-redis
     command: redis-server --appendonly yes
     volumes:
-      # Bind mount: data persistente en /var/lib/mispesos
-      - ${DATA_PATH:-./data}/redis:/data
+      # Named volume: data persistente dentro de Docker
+      - mispesos-redis-data:/data
     networks:
       - mispesos-network
     restart: unless-stopped
@@ -44,8 +44,8 @@ services:
     image: ollama/ollama:latest
     container_name: mispesos-ollama
     volumes:
-      # Bind mount: modelos AI persistentes en /var/lib/mispesos
-      - ${DATA_PATH:-./data}/ollama:/root/.ollama
+      # Named volume: modelos AI persistentes dentro de Docker
+      - mispesos-ollama-data:/root/.ollama
     networks:
       - mispesos-network
     restart: unless-stopped
@@ -76,9 +76,9 @@ services:
       - DEBUG=False
       - LOG_LEVEL=INFO
     volumes:
-      # Bind mount: uploads y logs persistentes en /var/lib/mispesos
-      - ${DATA_PATH:-./data}/uploads:/app/uploads
-      - ${DATA_PATH:-./data}/logs:/app/logs
+      # Named volumes: uploads y logs persistentes dentro de Docker
+      - mispesos-uploads:/app/uploads
+      - mispesos-logs:/app/logs
     ports:
       - "${FASTAPI_PORT:-8000}:8000"
     networks:
@@ -118,9 +118,9 @@ services:
       - LOG_LEVEL=INFO
       - USE_POLLING=True
     volumes:
-      # Bind mount: temp y logs persistentes en /var/lib/mispesos
-      - ${DATA_PATH:-./data}/bot_temp:/app/temp
-      - ${DATA_PATH:-./data}/logs:/app/logs
+      # Named volumes: temp y logs persistentes dentro de Docker
+      - mispesos-bot-temp:/app/temp
+      - mispesos-logs:/app/logs
     networks:
       - mispesos-network
     depends_on:
@@ -147,7 +147,6 @@ services:
   prometheus:
     image: prom/prometheus:latest
     container_name: mispesos-prometheus
-    user: "1000:1000"
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -156,7 +155,7 @@ services:
       - '--web.enable-lifecycle'
     volumes:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - ${DATA_PATH:-./data}/prometheus:/prometheus
+      - mispesos-prometheus-data:/prometheus
     ports:
       - "9090:9090"
     networks:
@@ -177,13 +176,12 @@ services:
   tempo:
     image: grafana/tempo:latest
     container_name: mispesos-tempo
-    user: "1000:1000"
     command: ["-config.file=/etc/tempo.yml"]
     volumes:
       - ./monitoring/tempo/tempo.yml:/etc/tempo.yml:ro
       - ./monitoring/tempo/tempo-overrides.yml:/etc/tempo-overrides.yml:ro
-      # Bind mount: data persistente en /var/lib/mispesos
-      - ${DATA_PATH:-./data}/tempo:/var/tempo
+      # Named volume: data persistente dentro de Docker
+      - mispesos-tempo-data:/var/tempo
     ports:
       - "3200:3200"  # Tempo HTTP
       - "4317:4317"  # OTLP gRPC
@@ -206,12 +204,11 @@ services:
   loki:
     image: grafana/loki:latest
     container_name: mispesos-loki
-    user: "1000:1000"
     command: ["-config.file=/etc/loki/local-config.yml"]
     volumes:
       - ./monitoring/loki/loki.yml:/etc/loki/local-config.yml:ro
-      # Bind mount: data persistente en /var/lib/mispesos
-      - ${DATA_PATH:-./data}/loki:/loki
+      # Named volume: data persistente dentro de Docker
+      - mispesos-loki-data:/loki
     ports:
       - "3100:3100"  # Loki HTTP
     networks:
@@ -232,14 +229,13 @@ services:
   promtail:
     image: grafana/promtail:latest
     container_name: mispesos-promtail
-    user: "1000:1000"
     command: ["-config.file=/etc/promtail/config.yml"]
     volumes:
       - ./monitoring/promtail/promtail.yml:/etc/promtail/config.yml:ro
-      # Bind mount: logs persistentes en /var/lib/mispesos
-      - ${DATA_PATH:-./data}/logs:/var/log/mispesos:ro
-      # Bind mount: positions file persistente
-      - ${DATA_PATH:-./data}/promtail:/var/promtail
+      # Named volumes: logs persistentes dentro de Docker
+      - mispesos-logs:/var/log/mispesos:ro
+      # Named volume: positions file persistente
+      - mispesos-promtail-data:/var/promtail
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
     networks:
       - mispesos-network
@@ -257,7 +253,6 @@ services:
   grafana:
     image: grafana/grafana:latest
     container_name: mispesos-grafana
-    user: "1000:1000"
     environment:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
@@ -265,7 +260,7 @@ services:
       - GF_SERVER_ROOT_URL=http://localhost:3000
       - GF_INSTALL_PLUGINS=
     volumes:
-      - ${DATA_PATH:-./data}/grafana:/var/lib/grafana
+      - mispesos-grafana-data:/var/lib/grafana
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
     ports:
       - "3000:3000"
@@ -294,3 +289,29 @@ networks:
   mispesos-network:
     driver: bridge
     name: mispesos-network
+
+volumes:
+  # Volúmenes nombrados para persistencia de datos
+  # Estos volúmenes se almacenan dentro de Docker y son compatibles con Windows
+  mispesos-postgres-data:
+    name: mispesos-postgres-data
+  mispesos-redis-data:
+    name: mispesos-redis-data
+  mispesos-ollama-data:
+    name: mispesos-ollama-data
+  mispesos-uploads:
+    name: mispesos-uploads
+  mispesos-logs:
+    name: mispesos-logs
+  mispesos-bot-temp:
+    name: mispesos-bot-temp
+  mispesos-prometheus-data:
+    name: mispesos-prometheus-data
+  mispesos-tempo-data:
+    name: mispesos-tempo-data
+  mispesos-loki-data:
+    name: mispesos-loki-data
+  mispesos-promtail-data:
+    name: mispesos-promtail-data
+  mispesos-grafana-data:
+    name: mispesos-grafana-data
