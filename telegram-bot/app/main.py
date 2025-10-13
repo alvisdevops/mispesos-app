@@ -45,7 +45,6 @@ async def main():
 
     logger.info(f"🌐 Environment: {settings.ENVIRONMENT}")
     logger.info(f"🔗 FastAPI URL: {settings.FASTAPI_URL}")
-    logger.info(f"🤖 Ollama URL: {settings.OLLAMA_URL}")
 
     # Test services
     await test_services()

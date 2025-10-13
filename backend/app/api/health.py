@@ -47,24 +47,6 @@ async def detailed_health_check(db: Session = Depends(get_db)):
             "error": str(e)
         }
 
-    # Check Ollama connectivity
-    try:
-        async with httpx.AsyncClient(timeout=5.0) as client:
-            response = await client.get(f"{settings.OLLAMA_URL}/api/tags")
-            if response.status_code == 200:
-                health_status["checks"]["ollama"] = {"status": "healthy"}
-            else:
-                health_status["checks"]["ollama"] = {
-                    "status": "degraded",
-                    "message": f"HTTP {response.status_code}"
-                }
-    except Exception as e:
-        health_status["status"] = "degraded"
-        health_status["checks"]["ollama"] = {
-            "status": "unhealthy",
-            "error": str(e)
-        }
-
     return health_status
 
 

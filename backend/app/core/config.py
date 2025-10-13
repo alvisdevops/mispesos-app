@@ -25,10 +25,6 @@ class Settings(BaseSettings):
     # Telegram
     TELEGRAM_BOT_TOKEN: str = ""
 
-    # Ollama AI
-    OLLAMA_URL: str = "http://localhost:11434"
-    OLLAMA_MODEL: str = "llama3.2:3b"  # Can be changed to phi3:mini later
-
     # Security
     SECRET_KEY: str = "your-secret-key-change-in-production"
     ALLOWED_HOSTS: List[str] = ["*"]
