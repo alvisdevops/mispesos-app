@@ -41,7 +41,6 @@ jobs:
           POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}
           DATABASE_URL=postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres:5432/${{ secrets.POSTGRES_DB }}
-          OLLAMA_MODEL=$OLLAMA_MODEL
           FASTAPI_PORT=${{ secrets.FASTAPI_PORT }}
           TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
           DATA_PATH=/var/lib/mispesos
