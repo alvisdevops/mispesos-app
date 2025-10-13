@@ -23,13 +23,10 @@ async def test_services():
     results = await processor.test_services()
 
     logger.info(f"📊 API Connection: {'✅' if results.get('api') else '❌'}")
-    logger.info(f"🤖 AI Connection: {'✅' if results.get('ai') else '❌'}")
+    logger.info(f"🔤 Parsing Service: {'✅' if results.get('ai') else '❌'}")
 
     if not results.get('api'):
         logger.warning("⚠️ API service not available - bot functionality will be limited")
-
-    if not results.get('ai'):
-        logger.warning("⚠️ AI service not available - using fallback parsing")
 
     return results
 
@@ -45,7 +42,6 @@ async def main():
 
     logger.info(f"🌐 Environment: {settings.ENVIRONMENT}")
     logger.info(f"🔗 FastAPI URL: {settings.FASTAPI_URL}")
-    logger.info(f"🤖 Ollama URL: {settings.OLLAMA_URL}")
 
     # Test services
     await test_services()

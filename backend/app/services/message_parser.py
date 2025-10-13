@@ -86,7 +86,7 @@ class MessageParserService:
                 telegram_user_id=telegram_user_id,
                 original_text=message,
                 ai_confidence=ai_result.confidence,
-                ai_model_used=settings.OLLAMA_MODEL
+                ai_model_used="regex_parser"
             )
 
             # Create the transaction

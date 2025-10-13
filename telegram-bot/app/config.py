@@ -16,9 +16,6 @@ class Settings(BaseSettings):
     # API Connection
     FASTAPI_URL: str = "http://fastapi:8000"
 
-    # AI Service
-    OLLAMA_URL: str = "http://ollama:11434"
-
     # Redis
     REDIS_URL: str = "redis://redis:6379"
 

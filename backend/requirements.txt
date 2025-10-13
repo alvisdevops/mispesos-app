@@ -25,9 +25,6 @@ python-multipart==0.0.6
 # Telegram Bot
 python-telegram-bot==20.7
 
-# AI and ML
-ollama==0.1.7
-
 # Image processing and OCR
 Pillow==10.1.0
 opencv-python-headless==4.10.0.84

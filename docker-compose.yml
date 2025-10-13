@@ -39,28 +39,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # Ollama AI Engine
-  ollama:
-    image: ollama/ollama:latest
-    container_name: mispesos-ollama
-    volumes:
-      # Bind mount: modelos AI persistentes en /var/lib/mispesos
-      - ${DATA_PATH:-./data}/ollama:/root/.ollama
-    networks:
-      - mispesos-network
-    restart: unless-stopped
-    environment:
-      - OLLAMA_HOST=0.0.0.0
-      - OLLAMA_KEEP_ALIVE=-1  # Keep model loaded in memory indefinitely
-      - OLLAMA_NUM_PARALLEL=1  # Process one request at a time for consistency
-      - OLLAMA_MAX_LOADED_MODELS=1  # Only keep one model in memory
-    healthcheck:
-      test: ["CMD-SHELL", "ollama list > /dev/null 2>&1 || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-
   # FastAPI Backend
   fastapi:
     build:
@@ -70,7 +48,6 @@ services:
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - REDIS_URL=redis://redis:6379/0
-      - OLLAMA_URL=http://ollama:11434
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - ENVIRONMENT=production
       - DEBUG=False
@@ -89,8 +66,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      ollama:
-        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -111,7 +86,6 @@ services:
     environment:
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - FASTAPI_URL=http://fastapi:8000
-      - OLLAMA_URL=http://ollama:11434
       - REDIS_URL=redis://redis:6379
       - ENVIRONMENT=production
       - DEBUG=False
@@ -128,8 +102,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      ollama:
-        condition: service_started
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "test -f /tmp/bot_healthy || exit 1"]
@@ -249,6 +221,11 @@ services:
       loki:
         condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "ps aux | grep promtail | grep -v grep || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     logging:
       driver: "json-file"
       options:

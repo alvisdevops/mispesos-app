@@ -78,8 +78,8 @@ async def test_ai_connection(db: Session = Depends(get_db)):
     return {
         "connected": is_connected,
         "message": message,
-        "service": "ollama",
-        "model": "llama3.2:3b"
+        "service": "regex_parser",
+        "model": "regex"
     }
 
 
