@@ -218,6 +218,11 @@ services:
       loki:
         condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "ps aux | grep promtail | grep -v grep || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     logging:
       driver: "json-file"
       options:
