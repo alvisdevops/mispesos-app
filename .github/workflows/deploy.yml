@@ -40,7 +40,7 @@ jobs:
           FASTAPI_PORT=${{ secrets.FASTAPI_PORT }}
           TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
           FRONTEND_PORT=80
-          VITE_API_URL=http://localhost:8000
+          VITE_API_URL=
           VITE_TELEGRAM_BOT_NAME=${{ secrets.TELEGRAM_BOT_NAME }}
           VITE_ADMIN_USER_ID=${{ secrets.ADMIN_USER_ID }}
           DATA_PATH=/var/lib/mispesos

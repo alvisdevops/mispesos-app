@@ -12,12 +12,17 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Build arguments for environment variables
+# Build arguments for environment variables (passed from docker-compose)
 ARG VITE_API_URL
 ARG VITE_TELEGRAM_BOT_NAME
 ARG VITE_ADMIN_USER_ID
 
-# Build the app
+# Set as environment variables for the build (Vite requires VITE_ prefix)
+ENV VITE_API_URL=${VITE_API_URL}
+ENV VITE_TELEGRAM_BOT_NAME=${VITE_TELEGRAM_BOT_NAME}
+ENV VITE_ADMIN_USER_ID=${VITE_ADMIN_USER_ID}
+
+# Build the app (environment variables are embedded in the bundle)
 RUN npm run build
 
 # Production stage

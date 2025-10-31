@@ -12,7 +12,7 @@ export default defineConfig({
   },
   server: {
     host: true,
-    port: 3000,
+    port: 5173, // Usar puerto por defecto de Vite para evitar conflicto con Grafana (3000)
     proxy: {
       '/api': {
         target: process.env.VITE_API_URL || 'http://localhost:8000',
