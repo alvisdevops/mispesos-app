@@ -90,3 +90,5 @@ dump.rdb
 #CLAUDE.AI
 .claude/
 CLAUDE.md
+
+docker-compose.override.yml
