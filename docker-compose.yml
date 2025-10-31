@@ -269,35 +269,6 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  # Frontend Web Dashboard
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        - VITE_API_URL=${VITE_API_URL:-http://localhost:8000}
-        - VITE_TELEGRAM_BOT_NAME=${VITE_TELEGRAM_BOT_NAME:-MisPesosBot}
-        - VITE_ADMIN_USER_ID=${VITE_ADMIN_USER_ID:-}
-    container_name: mispesos-frontend
-    ports:
-      - "${FRONTEND_PORT:-80}:80"
-    networks:
-      - mispesos-network
-    depends_on:
-      fastapi:
-        condition: service_healthy
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
 networks:
   mispesos-network:
     driver: bridge
