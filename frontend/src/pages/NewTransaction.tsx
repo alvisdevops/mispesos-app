@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { transactionsService } from '@/services/transactions';
 import { categoriesService } from '@/services/categories';
 import { TransactionForm } from '@/components/transactions/TransactionForm';
-import type { TransactionCreate } from '@/types';
+import type { TransactionCreate, TransactionUpdate } from '@/types';
 
 export const NewTransaction = () => {
   const navigate = useNavigate();
@@ -23,8 +23,9 @@ export const NewTransaction = () => {
     },
   });
 
-  const handleSubmit = (data: TransactionCreate) => {
-    createMutation.mutate(data);
+  const handleSubmit = (data: TransactionCreate | TransactionUpdate) => {
+    // En NewTransaction siempre será TransactionCreate
+    createMutation.mutate(data as TransactionCreate);
   };
 
   return (

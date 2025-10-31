@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Transaction, TransactionCreate, TransactionUpdate, PaymentMethod } from '@/types';
 
