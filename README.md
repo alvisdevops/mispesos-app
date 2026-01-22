@@ -152,3 +152,4 @@ MIT License - Ver archivo LICENSE para más detalles.
 
 **Desarrollado con ❤️ para el control financiero personal**
 
+
